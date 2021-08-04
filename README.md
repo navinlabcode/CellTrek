@@ -1,4 +1,3 @@
 # SChart
 
-Mouse brain data tutorial: 
-![Here](vignette_files/MouseBrainSChartExample.html)
+Mouse brain data tutorial: [Here](vignette_files/MouseBrainSChartExample.html)
