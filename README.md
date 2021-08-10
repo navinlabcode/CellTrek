@@ -12,6 +12,10 @@ install_github("navinlabcode/SChart")
 We start by loading the packages needed for the analyses.
 ``` r
 options(stringsAsFactors = F)
+library("SChartPack")
+library("akima")
+library("randomForestSRC")
+library("packcircles")
 library("dplyr")
 library("magrittr")
 library("dbscan")
@@ -24,6 +28,10 @@ library("visNetwork")
 library("shiny")
 library("plotly")
 library("viridis")
+library("RColorBrewer")
+library("ConsensusClusterPlus")
+library("philentropy")
+
 ```
 We then load mouse brain scRNA-seq and ST data, respectively. For ST data, we only used the frontal cortex region for this study. For scRNA-seq data, if you are running the code on a personal laptop, you may need to subset the scRNA-seq data to hundreds of cells since it will cost several minutes for using the whole scRNA-seq data in the SChart step.
 
@@ -90,7 +98,7 @@ SChartPack::schart_vis(brain_schart@meta.data %>% dplyr::select(coord_x, coord_y
 We select “cell_type” from the “Color” option and set “Categorical” from “Type” option.
 ![](vignette_files/F4_schart_vis.png)
 
-# 3. Cell colocalization analysis
+# 4. Cell colocalization analysis
 Based on the SChart result, we can summarize the colocalization patterns between different cell types using SColoc module. Here, we are using glutamatergic neuron cell types as an example.
 We first subset the glutamatergic neuron cell types from our charting result.
 ``` r
@@ -117,7 +125,7 @@ Next, we can visualize the colocalization result. Feel free to adjust the edge v
 SChartPack::scoloc_vis(brain_sgraph_KL_mst_cons, meta_data=brain_cell_class)
 ```
 ![](vignette_files/F5_scoloc_vis.png)
-# 4. Spatial-weighted Gene co-expression analysis within the cell type of interest
+# 5. Spatial-weighted gene co-expression analysis within the cell type of interest
 Based on the SChart result, we can further investigate the co-expression patterns within the cell type of interest using SCoexp module. Here, we will take L5 IT cells as an example using consensus clustering (CC) method.
 L5 IT cells first are extracted from the charting result.
 ``` r
