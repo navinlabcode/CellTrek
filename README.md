@@ -26,7 +26,9 @@ library("plotly")
 library("viridis")
 ```
 We then load mouse brain scRNA-seq and ST data, respectively. For ST data, we only used the frontal cortex region for this study. For scRNA-seq data, if you are running the code on a personal laptop, you may need to subset the scRNA-seq data to hundreds of cells since it will cost several minutes for using the whole scRNA-seq data in the SChart step.
+
 You can download the scRNA-seq data here: https://www.dropbox.com/s/ruseq3necn176c7/brain_sc.rds?dl=0
+
 You can download the ST data here: https://www.dropbox.com/s/azjysbt7lbpmbew/brain_st_cortex.rds?dl=0
 ``` r
 brain_st_cortex <- readRDS("brain_st_cortex.rds")
