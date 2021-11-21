@@ -6,7 +6,7 @@ SChart is a computational framework that can directly map single cells back to t
 In this tutorial, we will demonstrate the cell charting workflow based on the mouse brain data as part of our paper Figure 2
 ``` r
 library(devtools)
-install_github("navinlabcode/SChart")
+install_github("navinlabcode/CellTrek")
 ```
 # 2. Loading the packages and datasets (scRNA-seq and ST data)
 We start by loading the packages needed for the analyses.
