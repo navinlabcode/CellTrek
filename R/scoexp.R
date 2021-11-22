@@ -5,7 +5,6 @@
 #' @param zero_diag
 #'
 #' @return
-#' @export
 #'
 #' @examples rbfk(dis_mat, sigm, zero_diag=F)
 rbfk <- function (dis_mat, sigm, zero_diag=T) {
@@ -45,7 +44,6 @@ wcor <- function(X, W, method=c('pearson', 'spearman')[1], na_zero=T) {
 #' @param na_diag
 #'
 #' @return
-#' @export
 #'
 #' @examples cor_remove(cor_mat, ave_cor_cut = 0.5, min_n=10, max_n=100, na_diag=F)
 cor_remove <- function (cor_mat, ave_cor_cut = 0.5, min_n=5, max_n=100, na_diag=F) {
@@ -101,7 +99,6 @@ cc_wrapper <- function(d, maxK=8, reps=20, distance='spearman', verbose=F, plot=
 #' @param max_gen
 #'
 #' @return
-#' @export
 #'
 #' @examples cc_gene_k(cc_res, cor_mat, k=8, avg_con_min=.5, avg_cor_min=.5, min_gen=20, max_gen=100)
 cc_gene_k <- function(cc_res, cor_mat, k=8, avg_con_min=.5, avg_cor_min=.5, min_gen=10, max_gen=100) {
@@ -126,7 +123,7 @@ cc_gene_k <- function(cc_res, cor_mat, k=8, avg_con_min=.5, avg_cor_min=.5, min_
   res
 }
 
-#' Title
+#' Title A wrapper function of WGCNA with wcor matrix as input
 #'
 #' @param sim_mat similarity matrix
 #' @param powerVector power vector
@@ -165,7 +162,6 @@ wgcna_wrapper <- function(sim_mat, powerVector=c(1:20), minClusterSize=50, ...) 
 #' @param max_gen
 #'
 #' @return
-#' @export
 #'
 #' @examples wgcna_gene_k(wgcna_res, cor_mat, avg_cor_min=.5, min_gen=10, max_gen=100)
 wgcna_gene_k <- function(wgcna_res, cor_mat, avg_cor_min=.5, min_gen=10, max_gen=100) {
@@ -186,9 +182,9 @@ wgcna_gene_k <- function(wgcna_res, cor_mat, avg_cor_min=.5, min_gen=10, max_gen
 }
 
 
-#' Title
+#' Title SCoexp module
 #'
-#' @param schart_inp SChart input on cell of interests
+#' @param celltrek_inp CellTrek input on cell of interests
 #' @param sigm
 #' @param assay
 #' @param gene_select
@@ -210,24 +206,24 @@ wgcna_gene_k <- function(wgcna_res, cor_mat, avg_cor_min=.5, min_gen=10, max_gen
 #' @return
 #' @export
 #'
-#' @examples scoexp(schart_inp, sigm=NULL, assay='RNA', gene_select=NULL, zero_cutoff=5, cor_method='spearman', approach=c('cc', 'wgcna')[1], maxK=8, k=8, avg_con_min=.5, avg_cor_min=.5, min_gen=20, max_gen=100, keep_cc=T, keep_wgcna=T, keep_kern=T, keep_wcor=T)
-scoexp <- function(schart_inp, sigm=NULL, assay='RNA', gene_select=NULL, zero_cutoff=5, cor_method='spearman', approach=c('cc', 'wgcna')[1], maxK=8, k=8, avg_con_min=.5, avg_cor_min=.5, min_gen=20, max_gen=100, keep_cc=T, keep_wgcna=T, keep_kern=T, keep_wcor=T, ...) {
-  if (!all(c('coord_x', 'coord_y') %in% colnames(schart_inp@meta.data))) stop('coord_x and coord_y not detected in the metadata')
-  if (is.null(sigm)) sigm <- schart_inp@images[[1]]@scale.factors$spot_dis
+#' @examples scoexp(celltrek_inp, sigm=NULL, assay='RNA', gene_select=NULL, zero_cutoff=5, cor_method='spearman', approach=c('cc', 'wgcna')[1], maxK=8, k=8, avg_con_min=.5, avg_cor_min=.5, min_gen=20, max_gen=100, keep_cc=T, keep_wgcna=T, keep_kern=T, keep_wcor=T)
+scoexp <- function(celltrek_inp, sigm=NULL, assay='RNA', gene_select=NULL, zero_cutoff=5, cor_method='spearman', approach=c('cc', 'wgcna')[1], maxK=8, k=8, avg_con_min=.5, avg_cor_min=.5, min_gen=20, max_gen=100, keep_cc=T, keep_wgcna=T, keep_kern=T, keep_wcor=T, ...) {
+  if (!all(c('coord_x', 'coord_y') %in% colnames(celltrek_inp@meta.data))) stop('coord_x and coord_y not detected in the metadata')
+  if (is.null(sigm)) sigm <- celltrek_inp@images[[1]]@scale.factors$spot_dis
   if (is.null(gene_select)) {
     cat('gene filtering...\n')
-    feature_nz <- apply(schart_inp[[assay]]@data, 1, function(x) mean(x!=0)*100)
+    feature_nz <- apply(celltrek_inp[[assay]]@data, 1, function(x) mean(x!=0)*100)
     features <- names(feature_nz)[feature_nz > zero_cutoff]
     cat(length(features), 'features after filtering...\n')
   } else if (length(gene_select) > 1) {
-    features <- intersect(gene_select, rownames(schart_inp[[assay]]@data))
+    features <- intersect(gene_select, rownames(celltrek_inp[[assay]]@data))
     if (length(features)==0) stop('No genes in gene_select detected')
   }
-  schart_inp <- Seurat::ScaleData(schart_inp, features=features)
+  celltrek_inp <- Seurat::ScaleData(celltrek_inp, features=features)
   res <- list(gs=c(), cc=c(), rbfk=c(), wcor=c())
-  dist_mat <- dist(schart_inp@meta.data[, c('coord_x', 'coord_y')]) %>% as.matrix
+  dist_mat <- dist(celltrek_inp@meta.data[, c('coord_x', 'coord_y')]) %>% as.matrix
   kern_mat <- rbfk(dist_mat, sigm=sigm, zero_diag=F)
-  expr_mat <- t(as.matrix(schart_inp[[assay]]@scale.data))
+  expr_mat <- t(as.matrix(celltrek_inp[[assay]]@scale.data))
   cat('Calculating spatial-weighted cross-correlation...\n')
   wcor_mat <- wcor(X=expr_mat, W=kern_mat, method=cor_method)
 

@@ -27,12 +27,19 @@ scoloc_vis <- function(adj_mat, meta_data=NULL, directed=F) {
           checkboxInput(inputId='smooth', label='Smooth', value=FALSE),
           checkboxInput(inputId='physics', label='Physics', value=FALSE),
           numericInput('mass', 'Mass', value=.5, step=.01),
-          sliderInput('fontsize', 'FontSize', value=15, min=5, max=25)
+          sliderInput('fontsize', 'FontSize', value=15, min=5, max=25),
+          tags$hr(),
+          actionButton('StopID', 'Stop')
         ),
         mainPanel(visNetworkOutput("network", height = '800px'))
         )
       ),
     server=function(input, output) {
+
+      observeEvent(input$StopID, {
+        stopApp()
+      })
+
       output$network <- renderVisNetwork({
         if (!is.null(meta_data)) {
           if (input$node_col=='color') {

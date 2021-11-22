@@ -4,9 +4,8 @@
 #' @param col_cell Column name of cell type, cell type names must be syntactically valid
 #'
 #' @return dummy data frame with cells on columns
-#' @export
 #'
-#' @examples cell_dummy_df <- as_dummy_df(schart_df, col_cell='Cell')
+#' @examples cell_dummy_df <- as_dummy_df(celltrek_df, col_cell='Cell')
 as_dummy_df <- function(data_inp, col_cell='cell_names') {
   cell_names <- sort(as.character(unique(data_inp[, col_cell])))
   data_inp$id_add <- rownames(data_inp)
@@ -27,7 +26,6 @@ as_dummy_df <- function(data_inp, col_cell='cell_names') {
 #' @param x2
 #'
 #' @return
-#' @export
 #'
 #' @examples
 euc_dist <- function(x1, x2) {sqrt(sum((x1 - x2) ^ 2))}
@@ -44,7 +42,6 @@ euc_dist <- function(x1, x2) {sqrt(sum((x1 - x2) ^ 2))}
 #' @param Ylim The limits of Y-axis
 #'
 #' @return Kenerl density on grid
-#' @export
 #'
 #' @examples kern_res <- sp_grid_kern_bin(data=cell_dummy_df, coord=coord_df, h=150, n=25, tot_norm=TRUE, Xlim=range(coord_df$X), Ylim=range(coor_df$Y))
 sp_grid_kern_bin <- function(data, coord, min_num=15, h, n=25, tot_norm=TRUE, Xlim=range(coord[, 1]), Ylim=range(coord[, 2])) {
@@ -96,7 +93,6 @@ sp_grid_kern_bin <- function(data, coord, min_num=15, h, n=25, tot_norm=TRUE, Xl
 #' @param eps Small value added
 #'
 #' @return KL-divergence matrix
-#' @export
 #'
 #' @examples KL_res <- KL_(X=X, eps=1e-20)
 KL_ <- function(X, eps=1e-20) {
@@ -127,7 +123,6 @@ KL_ <- function(X, eps=1e-20) {
 #' @param replace should sampling be with replacement?
 #'
 #' @return A list of 1. Bootstrap KL-divergence; 2. MST consensus matrix
-#' @export
 #'
 #' @examples boot_mst_res <- KL_boot_mst(dummy_df=cell_type_dummy, coord_df=range(coord_df$X), Xlim=range(coord_df$Y), boot_n=100, prop=0.8, h=150, n=25, tot_norm=T, eps=1e-20)
 KL_boot_mst <- function(dummy_df, coord_df, min_num=15, Xlim=range(coord_df[, 1]), Ylim=range(coord_df[, 2]), boot_n=100, prop=0.8, replace=T, h=150, n=25, tot_norm=T, eps=1e-20) {
@@ -162,7 +157,7 @@ KL_boot_mst <- function(dummy_df, coord_df, min_num=15, Xlim=range(coord_df[, 1]
   return(output)
 }
 
-#' Title
+#' Title Build delaunay triangulation network
 #'
 #' @param coord_df Coordinates df
 #' @param return_name Return edge list with names?
@@ -190,13 +185,6 @@ build_delaunayn <- function(coord_df, return_name=T, dist_cutoff=NULL) {
   return(delaunayn_el)
 }
 
-## Check Delaunayn ##
-# coord_df <- data.frame(x=c(rnorm(100), rnorm(100, 10)), y=c(rnorm(100), rnorm(100, 10)))
-# coord_df <- data.frame(x=HBCA40_schart$coord_x, y=HBCA40_schart$coord_y)
-# test <- SChartPack::build_delaunayn(coord_df, return_name=F, dist_cutoff=100)
-# coord_df_segment <- data.frame(x=coord_df$x[test$X1], y=coord_df$y[test$X1], xend=coord_df$x[test$X2], yend=coord_df$y[test$X2])
-# ggplot() + geom_point(data=coord_df, aes(x, y)) + geom_segment(data=coord_df_segment, aes(x=x, y=y, xend=xend, yend=yend))
-
 #' Title
 #'
 #' @param el_inp Edge list of Delaunay triangulation network
@@ -204,7 +192,6 @@ build_delaunayn <- function(coord_df, return_name=T, dist_cutoff=NULL) {
 #' @param col_cell Column name of cell type, cell type names must be syntactically valid
 #'
 #' @return A list of 1.Network-based cell co-occurrence; 2.Cell co-occurrence log odds ratio
-#' @export
 #'
 #' @examples test <- edge_odds(el_inp, meta_data, col_cell='cell_names')
 edge_odds <- function(el_inp, meta_data, col_cell='cell_names') {
@@ -252,7 +239,6 @@ edge_odds <- function(el_inp, meta_data, col_cell='cell_names') {
 #' @param replace should sampling be with replacement?
 #'
 #' @return A list of 1. Bootstrap logOR distance; 2. MST consensus matrix
-#' @export
 #'
 #' @examples test <- DT_boot_mst(meta_df, coord_df, col_cell='cell_names', boot_n=100, prop=.8)
 DT_boot_mst <- function(meta_df, coord_df, col_cell='cell_names', boot_n=100, prop=.8, replace=T, dist_cutoff=NULL) {
@@ -298,7 +284,6 @@ DT_boot_mst <- function(meta_df, coord_df, col_cell='cell_names', boot_n=100, pr
 #' @param replace should sampling be with replacement?
 #'
 #' @return A list of 1. Bootstrap logOR distance; 2. MST consensus matrix
-#' @export
 #'
 #' @examples test <- KD_boot_mst(meta_df, coord_df, col_cell='cell_names', boot_n=100, prop=.8, eps=1e-5)
 KD_boot_mst <- function(meta_df, coord_df, col_cell='cell_names', boot_n=100, prop=.8, replace=T, k=10) {
@@ -333,11 +318,92 @@ KD_boot_mst <- function(meta_df, coord_df, col_cell='cell_names', boot_n=100, pr
   return(output)
 }
 
-
-
-#' Title
+#' Title Calculated K-distance between query cells and reference cells based on their spatial coordinates
 #'
-#' @param schart_inp SChart input
+#' @param inp_df inp_df must contain cell_names, 'coord_x', 'coord_y' columns
+#' @param ref Reference groups
+#' @param ref_type 'all' or 'each'
+#' @param que Query groups
+#' @param k The number of nearest neighbors
+#' @param new_name New name for kdist
+#' @param keep_nn Keep Nearest Neighboor id matrix?
+#'
+#' @return A list of 1. kdist data frame and 2. a list of knn id matrix
+#' @export
+#'
+#' @examples kdist_out <- kdist(inp_df=test_df, ref=c('A', 'B', 'C'), ref_type='each', que=unique(test_df$cell_names), k=10, keep_nn=T)
+kdist <- function(inp_df, ref=NULL, ref_type='all', que=NULL, k=10, new_name='kdist', keep_nn=F) {
+  ## Check ##
+  if (!all(c('cell_names', 'coord_x', 'coord_y') %in% colnames(inp_df))) {stop("Input data must contain 'cell_names', 'coord_x', 'coord_y' columns")}
+  if (any(!c(ref %in% inp_df$cell_names, que %in% inp_df$cell_names))) {stop('Reference or query group not in cell_names')}
+
+  que_dat <- inp_df[inp_df$cell_names %in% que, c('coord_x', 'coord_y')]
+  kNN_dist_df <- data.frame(matrix(NA, nrow=nrow(que_dat), ncol=0))
+  kNN_nn_list <- list()
+  if (ref_type=='each' & length(ref)>0) {
+    for (i in 1:length(ref)) {
+      ref_i <- ref[i]
+      ref_dat <- inp_df[inp_df$cell_names %in% ref_i, c('coord_x', 'coord_y')]
+      ## error when k >= nrow(ref_dat), reset k ##
+      if (nrow(ref_dat) <= k) {k <- (nrow(ref_dat)-1)}
+
+      kNN_res <- dbscan::kNN(x=ref_dat, k=k, query=que_dat)
+      kNN_dist <- apply(kNN_res$dist, 1, mean)
+      kNN_dist_df <- base::cbind(kNN_dist_df, kNN_dist)
+      if (keep_nn) {
+        nn_mat <- kNN_res$id
+        nn_mat[] <- rownames(ref_dat)[c(nn_mat)]
+        kNN_nn_list[[i]] <- nn_mat
+      } else {
+        kNN_nn_list[[i]] <- matrix(NA, 0, 0)
+      }
+    }
+    colnames(kNN_dist_df) <- paste0(ref, '_kdist')
+    names(kNN_nn_list) <- paste0(ref, '_ref')
+  } else {
+    ref_dat <- inp_df[inp_df$cell_names %in% ref, c('coord_x', 'coord_y')]
+    kNN_res <- dbscan::kNN(x=ref_dat, k=k, query=que_dat)
+    kNN_dist_df <- data.frame(apply(kNN_res$dist, 1, mean)) %>% magrittr::set_colnames(new_name)
+    if (keep_nn) {
+      nn_mat <- kNN_res$id
+      nn_mat[] <- rownames(ref_dat)[c(nn_mat)]
+      kNN_nn_list$nn_ref <- nn_mat
+    } else {
+      kNN_nn_list[[1]] <- matrix(NA, 0, 0)
+    }
+  }
+  output <- list(kdist_df=kNN_dist_df, knn_list=kNN_nn_list)
+  return(output)
+}
+
+#' Title Run K-distance with CellTrek(Seurat) object and add a metadata column
+#'
+#' @param celltrek_inp SChart seurat input
+#' @param grp_col Column name in meta data for reference and query groups
+#' @param ref Reference groups
+#' @param ref_type 'all' or 'each'
+#' @param que Query groups
+#' @param k The number of nearest neighbors
+#' @param new_name New name for kdist
+#' @param keep_nn Keep Nearest Neighboor id matrix?
+#'
+#' @return SChart seurat output
+#' @export
+#'
+#' @examples celltrek_test <- run_kdist(celltrek_inp=celltrek_inp, grp_col='cell_type', ref=c('A', 'B'), ref_type='each', que=unique(test_df$cell_names), k=10)
+run_kdist <- function(celltrek_inp, grp_col='cell_type', ref=NULL, ref_type='all', que=NULL, k=10, new_name='kdist', keep_nn=F) {
+  ## Check ##
+  if (any(!c(grp_col, 'coord_x', 'coord_y') %in% colnames(celltrek_inp@meta.data))) {stop("celltrek_inp metadata must contain grp_col, 'coord_x', 'coord_y' columns")}
+
+  inp_df <- celltrek_inp@meta.data %>% dplyr::select(cell_names=dplyr::one_of(grp_col), coord_x, coord_y)
+  output <- kdist(inp_df=inp_df, ref=ref, ref_type=ref_type, que = que, k=k, new_name=new_name, keep_nn=keep_nn)
+  celltrek_out <- Seurat::AddMetaData(celltrek_inp, metadata=output$kdist_df)
+  return (celltrek_out)
+}
+
+#' Title SColoc module
+#'
+#' @param celltrek_inp CellTrek input
 #' @param col_cell Column name of cell type, cell type names must be syntactically valid
 #' @param h Bandwidths for x and y directions, for KL, more details in kde2d function in MASS package
 #' @param n Number of grid points in each directions, for KL, more details in kde2d function in MASS package
@@ -348,22 +414,22 @@ KD_boot_mst <- function(meta_df, coord_df, col_cell='cell_names', boot_n=100, pr
 #' @return A list of 1.Bootstrap distance; 2.MST consensus matrix
 #' @export
 #'
-#' @examples cell_scoloc <- scoloc(schart_inp, col_cell='cell_names', use_method='KL', h=140, n=25)
-scoloc <- function(schart_inp, col_cell='cell_names', cell_min=15, use_method=c('KL', 'DT', 'KD')[2], h=schart_inp@images[[1]]@scale.factors$spot_dis, n=25, boot_n=20, ...) {
-  schart_temp <- schart_inp
-  schart_temp$cell_names <- make.names(as.character(schart_temp@meta.data[, col_cell]))
-  Idents(schart_temp) <- schart_temp$cell_names
-  cell_typ_kept <- names(table(schart_temp@meta.data$cell_names))[table(schart_temp@meta.data$cell_names)>cell_min]
-  schart_temp <- suppressWarnings(Seurat::SubsetData(schart_temp, ident.use=cell_typ_kept))
+#' @examples cell_scoloc <- scoloc(celltrek_inp, col_cell='cell_names', use_method='KL', h=140, n=25)
+scoloc <- function(celltrek_inp, col_cell='cell_names', cell_min=15, use_method=c('KL', 'DT', 'KD')[2], h=celltrek_inp@images[[1]]@scale.factors$spot_dis, n=25, boot_n=20, ...) {
+  celltrek_temp <- celltrek_inp
+  celltrek_temp$cell_names <- make.names(as.character(celltrek_temp@meta.data[, col_cell]))
+  Idents(celltrek_temp) <- celltrek_temp$cell_names
+  cell_typ_kept <- names(table(celltrek_temp@meta.data$cell_names))[table(celltrek_temp@meta.data$cell_names)>cell_min]
+  celltrek_temp <- suppressWarnings(Seurat::SubsetData(celltrek_temp, ident.use=cell_typ_kept))
   if (use_method=='KL') {
-    cell_dummy_df <- as_dummy_df(schart_temp@meta.data %>% dplyr::select(id_new, cell_names, coord_x, coord_y), col_cell='cell_names')
+    cell_dummy_df <- as_dummy_df(celltrek_temp@meta.data %>% dplyr::select(id_new, cell_names, coord_x, coord_y), col_cell='cell_names')
     cell_mst_con <- KL_boot_mst(dummy_df=cell_dummy_df[, c(5:ncol(cell_dummy_df))], coord_df=cell_dummy_df[, c(3, 4)], h=h, n=n, boot_n=boot_n, ...)
   }
   if (use_method=='DT') {
-    cell_mst_con <- DT_boot_mst(meta_df = schart_temp@meta.data, coord_df = schart_temp@meta.data[, c('coord_x', 'coord_y')], boot_n=boot_n, ...)
+    cell_mst_con <- DT_boot_mst(meta_df = celltrek_temp@meta.data, coord_df = celltrek_temp@meta.data[, c('coord_x', 'coord_y')], boot_n=boot_n, ...)
   }
   if (use_method=='KD') {
-    cell_mst_con <- KD_boot_mst(meta_df = schart_temp@meta.data, coord_df = schart_temp@meta.data[, c('coord_x', 'coord_y')], boot_n=boot_n, ...)
+    cell_mst_con <- KD_boot_mst(meta_df = celltrek_temp@meta.data, coord_df = celltrek_temp@meta.data[, c('coord_x', 'coord_y')], boot_n=boot_n, ...)
   }
   return(cell_mst_con)
 }
