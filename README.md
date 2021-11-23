@@ -12,7 +12,7 @@ install_github("navinlabcode/CellTrek")
 We start by loading the packages needed for the analyses.
 ``` r
 options(stringsAsFactors = F)
-library("CellTrekPack")
+library("CellTrek")
 library("akima")
 library("randomForestSRC")
 library("packcircles")
@@ -55,7 +55,7 @@ DimPlot(brain_sc, label = T, label.size = 4.5)
 # 3. Cell charting using CellTrek
 We first co-embed ST and scRNA-seq datasets using *traint*
 ``` r
-brain_traint <- CellTrekPack::traint(st_data=brain_st_cortex, sc_data=brain_sc, sc_assay='RNA', cell_names='cell_type')
+brain_traint <- CellTrek::traint(st_data=brain_st_cortex, sc_data=brain_sc, sc_assay='RNA', cell_names='cell_type')
 ```
 ``` r
 ## Finding transfer anchors... 
@@ -71,7 +71,7 @@ DimPlot(brain_traint, group.by = "type")
 ![](vignette_files/F3_scst_coembed.png)
 After coembedding, we can chart single cells to their spatial locations. Here, we use the non-linear interpolation (intp = T, intp_lin=F) approach to augment the ST spots.
 ``` r
-brain_celltrek <- CellTrekPack::celltrek(st_sc_int=brain_traint, int_assay='traint', sc_data=brain_sc, sc_assay = 'RNA', 
+brain_celltrek <- CellTrek::celltrek(st_sc_int=brain_traint, int_assay='traint', sc_data=brain_sc, sc_assay = 'RNA', 
                                    reduction='pca', intp=T, intp_pnt=5000, intp_lin=F, nPCs=30, ntree=1000, 
                                    dist_thresh=0.55, top_spot=5, spot_n=5, repel_r=20, repel_iter=20, keep_model=T)$celltrek
 ```
@@ -92,7 +92,7 @@ After cell charting, we can interactively visualize the CellTrek result using *c
 ``` r
 brain_celltrek$cell_type <- factor(brain_celltrek$cell_type, levels=sort(unique(brain_celltrek$cell_type)))
 
-CellTrekPack::celltrek_vis(brain_celltrek@meta.data %>% dplyr::select(coord_x, coord_y, cell_type:id_new),
+CellTrek::celltrek_vis(brain_celltrek@meta.data %>% dplyr::select(coord_x, coord_y, cell_type:id_new),
                        brain_celltrek@images$anterior1@image, brain_celltrek@images$anterior1@scale.factors$lowres)
 ```
 We select “cell_type” from the “Color” option and set “Categorical” from “Type” option.
@@ -109,7 +109,7 @@ brain_celltrek_glut$cell_type %<>% factor(., levels=glut_cell)
 ```
 Then we can use scoloc module to perform colocalization analysis.
 ``` r
-brain_sgraph_KL <- CellTrekPack::scoloc(brain_celltrek_glut, col_cell='cell_type', cell_min=15, use_method='KL', eps=1e-50)
+brain_sgraph_KL <- CellTrek::scoloc(brain_celltrek_glut, col_cell='cell_type', cell_min=15, use_method='KL', eps=1e-50)
 ```
 ``` r
 ## 1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20
@@ -122,7 +122,7 @@ brain_cell_class <- brain_celltrek@meta.data %>% dplyr::select(id=cell_type, cla
 ```
 Next, we can visualize the colocalization result. Feel free to adjust the edge value cutoff.
 ``` r
-CellTrekPack::scoloc_vis(brain_sgraph_KL_mst_cons, meta_data=brain_cell_class)
+CellTrek::scoloc_vis(brain_sgraph_KL_mst_cons, meta_data=brain_cell_class)
 ```
 ![](vignette_files/F5_scoloc_vis.png)
 # 5. Spatial-weighted gene co-expression analysis within the cell type of interest
@@ -148,7 +148,7 @@ feature_temp <- vst_df$id[1:2000]
 ```
 We use scoexp to do the spatial-weighted gene co-expression analysis.
 ``` r
-brain_celltrek_l5_scoexp_res_cc <- CellTrekPack::scoexp(celltrek_inp=brain_celltrek_l5, assay='RNA', approach='cc', gene_select = feature_temp, sigm=140, avg_cor_min=.4, zero_cutoff=3, min_gen=40, max_gen=400)
+brain_celltrek_l5_scoexp_res_cc <- CellTrek::scoexp(celltrek_inp=brain_celltrek_l5, assay='RNA', approach='cc', gene_select = feature_temp, sigm=140, avg_cor_min=.4, zero_cutoff=3, min_gen=40, max_gen=400)
 ```
 ``` r
 ## Calculating spatial-weighted cross-correlation...
@@ -226,7 +226,7 @@ sessionInfo()
 ##  [23] data.tree_1.0.0             sctransform_0.2.1          
 ##  [25] DiagrammeR_1.0.6.1          compiler_3.6.2             
 ##  [27] httr_1.4.2                  randomForestSRC_2.10.1     
-##  [29] CellTrekPack_0.0.0.9000       assertthat_0.2.1           
+##  [29] CellTrek_0.0.0.9000       assertthat_0.2.1           
 ##  [31] Matrix_1.2-18               fastmap_1.0.1              
 ##  [33] lazyeval_0.2.2              cli_2.0.2                  
 ##  [35] later_1.1.0.1               htmltools_0.5.1.1          
