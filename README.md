@@ -1,7 +1,7 @@
-# A Quick Tour of SChart toolkit
+# A Quick Tour of CellTrek toolkit
 
 # 1. Introduction and installation
-SChart is a computational framework that can directly map single cells back to their spatial coordinates in tissue sections based on scRNA-seq and ST data. This method provides a new paradigm that is distinct from ST deconvolution, enabling a more flexible and direct investigation of single cell data with spatial topography. The SChart toolkit also provides two downstream analysis modules, including SColoc for spatial colocalization analysis and SCoexp for spatial co-expression analysis.
+CellTrek is a computational framework that can directly map single cells back to their spatial coordinates in tissue sections based on scRNA-seq and ST data. This method provides a new paradigm that is distinct from ST deconvolution, enabling a more flexible and direct investigation of single cell data with spatial topography. The CellTrek toolkit also provides two downstream analysis modules, including SColoc for spatial colocalization analysis and SCoexp for spatial co-expression analysis.
 
 In this tutorial, we will demonstrate the cell charting workflow based on the mouse brain data as part of our paper Figure 2
 ``` r
@@ -12,7 +12,7 @@ install_github("navinlabcode/CellTrek")
 We start by loading the packages needed for the analyses.
 ``` r
 options(stringsAsFactors = F)
-library("SChartPack")
+library("CellTrekPack")
 library("akima")
 library("randomForestSRC")
 library("packcircles")
@@ -33,7 +33,7 @@ library("ConsensusClusterPlus")
 library("philentropy")
 
 ```
-We then load mouse brain scRNA-seq and ST data, respectively. For ST data, we only used the frontal cortex region for this study. For scRNA-seq data, if you are running the code on a personal laptop, you may need to subset the scRNA-seq data to hundreds of cells since it will cost several minutes for using the whole scRNA-seq data in the SChart step.
+We then load mouse brain scRNA-seq and ST data, respectively. For ST data, we only used the frontal cortex region for this study. For scRNA-seq data, if you are running the code on a personal laptop, you may need to subset the scRNA-seq data to hundreds of cells since it will cost several minutes for using the whole scRNA-seq data in the CellTrek step.
 
 You can download the scRNA-seq data here: https://www.dropbox.com/s/ruseq3necn176c7/brain_sc.rds?dl=0
 
@@ -52,10 +52,10 @@ DimPlot(brain_sc, label = T, label.size = 4.5)
 ```
 ![](vignette_files/F2_SC_dimplot.png)
 
-# 3. Cell charting using SChart
+# 3. Cell charting using CellTrek
 We first co-embed ST and scRNA-seq datasets using *traint*
 ``` r
-brain_traint <- SChartPack::traint(st_data=brain_st_cortex, sc_data=brain_sc, sc_assay='RNA', cell_names='cell_type')
+brain_traint <- CellTrekPack::traint(st_data=brain_st_cortex, sc_data=brain_sc, sc_assay='RNA', cell_names='cell_type')
 ```
 ``` r
 ## Finding transfer anchors... 
@@ -71,9 +71,9 @@ DimPlot(brain_traint, group.by = "type")
 ![](vignette_files/F3_scst_coembed.png)
 After coembedding, we can chart single cells to their spatial locations. Here, we use the non-linear interpolation (intp = T, intp_lin=F) approach to augment the ST spots.
 ``` r
-brain_schart <- SChartPack::schart(st_sc_int=brain_traint, int_assay='traint', sc_data=brain_sc, sc_assay = 'RNA', 
+brain_celltrek <- CellTrekPack::celltrek(st_sc_int=brain_traint, int_assay='traint', sc_data=brain_sc, sc_assay = 'RNA', 
                                    reduction='pca', intp=T, intp_pnt=5000, intp_lin=F, nPCs=30, ntree=1000, 
-                                   dist_thresh=0.55, top_spot=5, spot_n=5, repel_r=20, repel_iter=20, keep_model=T)$schart
+                                   dist_thresh=0.55, top_spot=5, spot_n=5, repel_r=20, repel_iter=20, keep_model=T)$celltrek
 ```
 ``` r
 ## Distance between spots is: 138 
@@ -88,28 +88,28 @@ brain_schart <- SChartPack::schart(st_sc_int=brain_traint, int_assay='traint', s
 ## Creating Seurat Object... 
 ## sc data...
 ```
-After cell charting, we can interactively visualize the SChart result using *schart_vis*
+After cell charting, we can interactively visualize the CellTrek result using *celltrek_vis*
 ``` r
-brain_schart$cell_type <- factor(brain_schart$cell_type, levels=sort(unique(brain_schart$cell_type)))
+brain_celltrek$cell_type <- factor(brain_celltrek$cell_type, levels=sort(unique(brain_celltrek$cell_type)))
 
-SChartPack::schart_vis(brain_schart@meta.data %>% dplyr::select(coord_x, coord_y, cell_type:id_new),
-                       brain_schart@images$anterior1@image, brain_schart@images$anterior1@scale.factors$lowres)
+CellTrekPack::celltrek_vis(brain_celltrek@meta.data %>% dplyr::select(coord_x, coord_y, cell_type:id_new),
+                       brain_celltrek@images$anterior1@image, brain_celltrek@images$anterior1@scale.factors$lowres)
 ```
 We select “cell_type” from the “Color” option and set “Categorical” from “Type” option.
-![](vignette_files/F4_schart_vis.png)
+![](vignette_files/F4_celltrek_vis.png)
 
 # 4. Cell colocalization analysis
-Based on the SChart result, we can summarize the colocalization patterns between different cell types using SColoc module. Here, we are using glutamatergic neuron cell types as an example.
+Based on the CellTrek result, we can summarize the colocalization patterns between different cell types using SColoc module. Here, we are using glutamatergic neuron cell types as an example.
 We first subset the glutamatergic neuron cell types from our charting result.
 ``` r
 glut_cell <- c('L2/3 IT', 'L4', 'L5 IT', 'L5 PT', 'NP', 'L6 IT', 'L6 CT',  'L6b')
 names(glut_cell) <- make.names(glut_cell)
-brain_schart_glut <- subset(brain_schart, subset=cell_type %in% glut_cell)
-brain_schart_glut$cell_type %<>% factor(., levels=glut_cell)
+brain_celltrek_glut <- subset(brain_celltrek, subset=cell_type %in% glut_cell)
+brain_celltrek_glut$cell_type %<>% factor(., levels=glut_cell)
 ```
 Then we can use scoloc module to perform colocalization analysis.
 ``` r
-brain_sgraph_KL <- SChartPack::scoloc(brain_schart_glut, col_cell='cell_type', cell_min=15, use_method='KL', eps=1e-50)
+brain_sgraph_KL <- CellTrekPack::scoloc(brain_celltrek_glut, col_cell='cell_type', cell_min=15, use_method='KL', eps=1e-50)
 ```
 ``` r
 ## 1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20
@@ -118,37 +118,37 @@ brain_sgraph_KL <- SChartPack::scoloc(brain_schart_glut, col_cell='cell_type', c
 ## We extract the minimum spanning tree (MST) result from the graph
 brain_sgraph_KL_mst_cons <- brain_sgraph_KL$mst_cons
 rownames(brain_sgraph_KL_mst_cons) <- colnames(brain_sgraph_KL_mst_cons) <- glut_cell[colnames(brain_sgraph_KL_mst_cons)]
-brain_cell_class <- brain_schart@meta.data %>% dplyr::select(id=cell_type, class=class) %>% unique
+brain_cell_class <- brain_celltrek@meta.data %>% dplyr::select(id=cell_type, class=class) %>% unique
 ```
 Next, we can visualize the colocalization result. Feel free to adjust the edge value cutoff.
 ``` r
-SChartPack::scoloc_vis(brain_sgraph_KL_mst_cons, meta_data=brain_cell_class)
+CellTrekPack::scoloc_vis(brain_sgraph_KL_mst_cons, meta_data=brain_cell_class)
 ```
 ![](vignette_files/F5_scoloc_vis.png)
 # 5. Spatial-weighted gene co-expression analysis within the cell type of interest
-Based on the SChart result, we can further investigate the co-expression patterns within the cell type of interest using SCoexp module. Here, we will take L5 IT cells as an example using consensus clustering (CC) method.
+Based on the CellTrek result, we can further investigate the co-expression patterns within the cell type of interest using SCoexp module. Here, we will take L5 IT cells as an example using consensus clustering (CC) method.
 L5 IT cells first are extracted from the charting result.
 ``` r
-brain_schart_l5 <- subset(brain_schart, subset=cell_type=='L5 IT')
-brain_schart_l5@assays$RNA@scale.data <- matrix(NA, 1, 1)
-brain_schart_l5$cluster <- gsub('L5 IT VISp ', '', brain_schart_l5$cluster)
-DimPlot(brain_schart_l5, group.by = 'cluster')
+brain_celltrek_l5 <- subset(brain_celltrek, subset=cell_type=='L5 IT')
+brain_celltrek_l5@assays$RNA@scale.data <- matrix(NA, 1, 1)
+brain_celltrek_l5$cluster <- gsub('L5 IT VISp ', '', brain_celltrek_l5$cluster)
+DimPlot(brain_celltrek_l5, group.by = 'cluster')
 ```
 ![](vignette_files/F6_L5IT.png)
 We select top 2000 variable genes (exclude mitochondrial, ribosomal and high-zero genes)
 ``` r
-brain_schart_l5 <- FindVariableFeatures(brain_schart_l5)
-vst_df <- brain_schart_l5@assays$RNA@meta.features %>% data.frame %>% mutate(id=rownames(.))
-nz_test <- apply(as.matrix(brain_schart_l5[['RNA']]@data), 1, function(x) mean(x!=0)*100)
+brain_celltrek_l5 <- FindVariableFeatures(brain_celltrek_l5)
+vst_df <- brain_celltrek_l5@assays$RNA@meta.features %>% data.frame %>% mutate(id=rownames(.))
+nz_test <- apply(as.matrix(brain_celltrek_l5[['RNA']]@data), 1, function(x) mean(x!=0)*100)
 hz_gene <- names(nz_test)[nz_test<20]
-mt_gene <- grep('^Mt-', rownames(brain_schart_l5), value=T)
-rp_gene <- grep('^Rpl|^Rps', rownames(brain_schart_l5), value=T)
+mt_gene <- grep('^Mt-', rownames(brain_celltrek_l5), value=T)
+rp_gene <- grep('^Rpl|^Rps', rownames(brain_celltrek_l5), value=T)
 vst_df <- vst_df %>% dplyr::filter(!(id %in% c(mt_gene, rp_gene, hz_gene))) %>% arrange(., -vst.variance.standardized)
 feature_temp <- vst_df$id[1:2000]
 ```
 We use scoexp to do the spatial-weighted gene co-expression analysis.
 ``` r
-brain_schart_l5_scoexp_res_cc <- SChartPack::scoexp(schart_inp=brain_schart_l5, assay='RNA', approach='cc', gene_select = feature_temp, sigm=140, avg_cor_min=.4, zero_cutoff=3, min_gen=40, max_gen=400)
+brain_celltrek_l5_scoexp_res_cc <- CellTrekPack::scoexp(celltrek_inp=brain_celltrek_l5, assay='RNA', approach='cc', gene_select = feature_temp, sigm=140, avg_cor_min=.4, zero_cutoff=3, min_gen=40, max_gen=400)
 ```
 ``` r
 ## Calculating spatial-weighted cross-correlation...
@@ -158,11 +158,11 @@ brain_schart_l5_scoexp_res_cc <- SChartPack::scoexp(schart_inp=brain_schart_l5, 
 ```
 We can visualize the co-expression modules using heatmap.
 ``` r
-brain_schart_l5_k <- rbind(data.frame(gene=c(brain_schart_l5_scoexp_res_cc$gs[[1]]), G='K1'), 
-                           data.frame(gene=c(brain_schart_l5_scoexp_res_cc$gs[[2]]), G='K2')) %>% 
+brain_celltrek_l5_k <- rbind(data.frame(gene=c(brain_celltrek_l5_scoexp_res_cc$gs[[1]]), G='K1'), 
+                           data.frame(gene=c(brain_celltrek_l5_scoexp_res_cc$gs[[2]]), G='K2')) %>% 
                            set_rownames(.$gene) %>% dplyr::select(-1)
-pheatmap::pheatmap(brain_schart_l5_scoexp_res_cc$wcor[rownames(brain_schart_l5_k), rownames(brain_schart_l5_k)], 
-                   clustering_method='ward.D2', annotation_row=brain_schart_l5_k, show_rownames=F, show_colnames=F, 
+pheatmap::pheatmap(brain_celltrek_l5_scoexp_res_cc$wcor[rownames(brain_celltrek_l5_k), rownames(brain_celltrek_l5_k)], 
+                   clustering_method='ward.D2', annotation_row=brain_celltrek_l5_k, show_rownames=F, show_colnames=F, 
                    treeheight_row=10, treeheight_col=10, annotation_legend = T, fontsize=8,
                    color=viridis(10), main='L5 IT spatial co-expression')
 ```
@@ -170,16 +170,16 @@ pheatmap::pheatmap(brain_schart_l5_scoexp_res_cc$wcor[rownames(brain_schart_l5_k
 We identified two distinct modules.
 Based on our identified co-expression modules, we can calculated the module scores.
 ``` r
-brain_schart_l5 <- AddModuleScore(brain_schart_l5, features=brain_schart_l5_scoexp_res_cc$gs, name='CC_', nbin=10, ctrl=50, seed=42)
+brain_celltrek_l5 <- AddModuleScore(brain_celltrek_l5, features=brain_celltrek_l5_scoexp_res_cc$gs, name='CC_', nbin=10, ctrl=50, seed=42)
 ## First we look into the coexpression module based on the scRNA-seq embedding
-FeaturePlot(brain_schart_l5, grep('CC_', colnames(brain_schart_l5@meta.data), value=T))
+FeaturePlot(brain_celltrek_l5, grep('CC_', colnames(brain_celltrek_l5@meta.data), value=T))
 ```
 ![](vignette_files/F8_modulescore_umap.png)
 Next we investigate the module scores at the spatial level.
 ``` r
-SpatialFeaturePlot(brain_schart_l5, grep('CC_', colnames(brain_schart_l5@meta.data), value=T))
+SpatialFeaturePlot(brain_celltrek_l5, grep('CC_', colnames(brain_celltrek_l5@meta.data), value=T))
 ``` 
-![](vignette_files/F9_modulescore_schart.png)
+![](vignette_files/F9_modulescore_celltrek.png)
 ``` r
 sessionInfo()
 ```
@@ -226,7 +226,7 @@ sessionInfo()
 ##  [23] data.tree_1.0.0             sctransform_0.2.1          
 ##  [25] DiagrammeR_1.0.6.1          compiler_3.6.2             
 ##  [27] httr_1.4.2                  randomForestSRC_2.10.1     
-##  [29] SChartPack_0.0.0.9000       assertthat_0.2.1           
+##  [29] CellTrekPack_0.0.0.9000       assertthat_0.2.1           
 ##  [31] Matrix_1.2-18               fastmap_1.0.1              
 ##  [33] lazyeval_0.2.2              cli_2.0.2                  
 ##  [35] later_1.1.0.1               htmltools_0.5.1.1          
