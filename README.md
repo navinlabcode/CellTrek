@@ -96,7 +96,7 @@ CellTrek::celltrek_vis(brain_celltrek@meta.data %>% dplyr::select(coord_x, coord
                        brain_celltrek@images$anterior1@image, brain_celltrek@images$anterior1@scale.factors$lowres)
 ```
 We select “cell_type” from the “Color” option and set “Categorical” from “Type” option.
-![](vignette_files/F4_celltrek_vis.png)
+![](vignette_files/F4_schart_vis.png)
 
 # 4. Cell colocalization analysis
 Based on the CellTrek result, we can summarize the colocalization patterns between different cell types using SColoc module. Here, we are using glutamatergic neuron cell types as an example.
