@@ -409,18 +409,15 @@ run_kdist <- function(celltrek_inp, grp_col='cell_type', ref=NULL, ref_type='all
 #' @param n Number of grid points in each directions, for KL, more details in kde2d function in MASS package
 #' @param ... See in boot_mst
 #' @param use_method Use density-based Kullback Leibler divergence or Delaunay Triangulation network
-#' @param cell_min Minimum number of cells in each cell type to be calculated
 #'
 #' @return A list of 1.Bootstrap distance; 2.MST consensus matrix
 #' @export
 #'
 #' @examples cell_scoloc <- scoloc(celltrek_inp, col_cell='cell_names', use_method='KL', h=140, n=25)
-scoloc <- function(celltrek_inp, col_cell='cell_names', cell_min=15, use_method=c('KL', 'DT', 'KD')[2], h=celltrek_inp@images[[1]]@scale.factors$spot_dis, n=25, boot_n=20, ...) {
+scoloc <- function(celltrek_inp, col_cell='cell_names', use_method=c('KL', 'DT', 'KD')[2], h=celltrek_inp@images[[1]]@scale.factors$spot_dis, n=25, boot_n=20, ...) {
   celltrek_temp <- celltrek_inp
   celltrek_temp$cell_names <- make.names(as.character(celltrek_temp@meta.data[, col_cell]))
   Idents(celltrek_temp) <- celltrek_temp$cell_names
-  cell_typ_kept <- names(table(celltrek_temp@meta.data$cell_names))[table(celltrek_temp@meta.data$cell_names)>cell_min]
-  celltrek_temp <- suppressWarnings(Seurat::SubsetData(celltrek_temp, ident.use=cell_typ_kept))
   if (use_method=='KL') {
     cell_dummy_df <- as_dummy_df(celltrek_temp@meta.data %>% dplyr::select(id_new, cell_names, coord_x, coord_y), col_cell='cell_names')
     cell_mst_con <- KL_boot_mst(dummy_df=cell_dummy_df[, c(5:ncol(cell_dummy_df))], coord_df=cell_dummy_df[, c(3, 4)], h=h, n=n, boot_n=boot_n, ...)
