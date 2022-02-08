@@ -99,7 +99,7 @@ We select “cell_type” from the “Color” option and set “Categorical” 
 ![](vignette_files/F4_schart_vis.png)
 
 # 4. Cell colocalization analysis
-Based on the CellTrek result, we can summarize the colocalization patterns between different cell types using SColoc module. Here, we are using glutamatergic neuron cell types as an example.
+Based on the CellTrek result, we can summarize the colocalization patterns between different cell types using SColoc module. Here, we are using glutamatergic neuron cell types as an example (it is recommended to remove some cell types with very few cells, e.g., n<20).
 We first subset the glutamatergic neuron cell types from our charting result.
 ``` r
 glut_cell <- c('L2/3 IT', 'L4', 'L5 IT', 'L5 PT', 'NP', 'L6 IT', 'L6 CT',  'L6b')
