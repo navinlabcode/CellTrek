@@ -9,7 +9,7 @@ library(devtools)
 install_github("navinlabcode/CellTrek")
 ```
 # 2. Loading the packages and datasets (scRNA-seq and ST data)
-We start by loading the packages needed for the analyses.
+We start by loading the packages needed for the analyses. Please install them if you haven't.
 ``` r
 options(stringsAsFactors = F)
 library("CellTrek")
