@@ -69,7 +69,7 @@ sp_grid_kern_bin <- function(data, coord, min_num=15, h, n=25, tot_norm=TRUE, Xl
   data_out_list <- data_merge %>% dplyr::select(colnames(data_)) %>%
     apply(2, function(x) {
       k2d_temp <- MASS::kde2d(data_merge$X1[which(x==1)], data_merge$X2[which(x==1)], lims=c(Xlim, Ylim), h, n) %>%
-        extract2('z') %>% reshape2::melt %>% data.frame %>% set_colnames(c('grid_1', 'grid_2', 'Val'))
+        extract2('z') %>% reshape2::melt() %>% data.frame %>% set_colnames(c('grid_1', 'grid_2', 'Val'))
       if (tot_norm) {k2d_temp$Val <- k2d_temp$Val/sum(k2d_temp$Val)}
       k2d_temp
     })
