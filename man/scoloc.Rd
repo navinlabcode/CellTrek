@@ -7,7 +7,6 @@
 scoloc(
   celltrek_inp,
   col_cell = "cell_names",
-  cell_min = 15,
   use_method = c("KL", "DT", "KD")[2],
   h = celltrek_inp@images[[1]]@scale.factors$spot_dis,
   n = 25,
@@ -19,8 +18,6 @@ scoloc(
 \item{celltrek_inp}{CellTrek input}
 
 \item{col_cell}{Column name of cell type, cell type names must be syntactically valid}
-
-\item{cell_min}{Minimum number of cells in each cell type to be calculated}
 
 \item{use_method}{Use density-based Kullback Leibler divergence or Delaunay Triangulation network}
 
