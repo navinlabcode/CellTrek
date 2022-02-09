@@ -24,6 +24,7 @@ scoloc_vis <- function(adj_mat, meta_data=NULL, directed=F) {
           sliderInput('edge_val', 'Edge Value Cutoff',
                       min=round(range(mst_cons_edge$value)[1], 2), max=round(range(mst_cons_edge$value)[2], 2), value=round(range(mst_cons_edge$value)[1], 2), step=diff(round(range(mst_cons_edge$value), 2))/100),
           selectInput(inputId='node_col', label='Color', choices=c('None', colnames(meta_data)), selected='None'),
+          selectInput(inputId='node_size', label='Size', choices=c('None', colnames(meta_data)), selected='None'),
           checkboxInput(inputId='smooth', label='Smooth', value=FALSE),
           checkboxInput(inputId='physics', label='Physics', value=FALSE),
           numericInput('mass', 'Mass', value=.5, step=.01),
@@ -54,8 +55,12 @@ scoloc_vis <- function(adj_mat, meta_data=NULL, directed=F) {
             col_df$color <- node_cols[col_df$col_]
             mst_cons_node <- dplyr::left_join(mst_cons_node, col_df, by = "id") %>% data.frame
           }
+          if (input$node_size!='None') {
+            size_colmn <- as.character(input$node_size)
+            size_df <- data.frame(id=meta_data$id, value=as.numeric(meta_data[, size_colmn])/sum(as.numeric(meta_data[, size_colmn])))
+            mst_cons_node <- dplyr::left_join(mst_cons_node, size_df, by = "id") %>% data.frame
+          }
         }
-
         mst_cons_edge <- mst_cons_edge[mst_cons_edge$value > input$edge_val, ]
         visNetwork::visNetwork(mst_cons_node, mst_cons_edge) %>%
           visNetwork::visNodes(mass=input$mass, size=15, font = list(size=input$fontsize)) %>%

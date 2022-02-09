@@ -75,6 +75,37 @@ traint <- function (st_data, sc_data, st_assay='Spatial', sc_assay='scint', norm
   return (sc_st_int)
 }
 
+#' Title Mannually repelling celltrek cells
+#'
+#' @param celltrek_inp CellTrek(Seurat) object
+#' @param repel_r Repelling radius
+#' @param repel_iter Repelling iterations
+#'
+#' @return CellTrek(Seurat) object
+#' @export
+#'
+#' @examples
+celltrek_repel <- function(celltrek_inp, repel_r=5, repel_iter=10) {
+  celltrek_dr_raw <- Embeddings(celltrek_inp, 'celltrek_raw')
+  celltrek_dr <- Embeddings(celltrek_inp, 'celltrek')
+  repel_input <- data.frame(celltrek_dr_raw, repel_r=repel_r)
+
+  ## Add noise ##
+  theta <- runif(nrow(celltrek_dr), 0, 2*pi)
+  alpha <- sqrt(runif(nrow(celltrek_dr), 0, 1))
+  repel_input[, 1] <- repel_input[, 1] + sin(theta)*alpha*repel_r
+  repel_input[, 2] <- repel_input[, 2] + cos(theta)*alpha*repel_r
+
+  ## Repelling ##
+  cat('Repelling points...\n')
+  celltrek_repel <- packcircles::circleRepelLayout(repel_input, sizetype='radius', maxiter=repel_iter)
+  celltrek_dr[, 1] <- celltrek_repel$layout$x
+  celltrek_dr[, 2] <- celltrek_repel$layout$y
+  celltrek_out <- celltrek_inp
+  celltrek_out@reductions$celltrek@cell.embeddings <- celltrek_dr
+  return(celltrek_out)
+}
+
 #' Title Calculate the RF-distance between sc and st
 #'
 #' @param st_sc_int Seurat traint object
@@ -191,21 +222,21 @@ celltrek_chart <- function (dist_mat, coord_df, dist_cut=500, top_spot=10, spot_
                                           dist_edge_list %>% group_by(Var2) %>% top_n(n=spot_n, wt=-value)) %>% data.frame
 
   cat('Spatial Charting SC data...\n')
+  sc_coord <- sc_coord_raw <- data.frame(id_raw=dist_edge_list_sub$Var1, id_new=make.names(dist_edge_list_sub$Var1, unique = T))
+  sc_coord$coord_x <- sc_coord_raw$coord_x <- coord_df$coord_x[match(dist_edge_list_sub$Var2, rownames(coord_df))]
+  sc_coord$coord_y <- sc_coord_raw$coord_y <- coord_df$coord_y[match(dist_edge_list_sub$Var2, rownames(coord_df))]
   ## Add noise ##
   theta <- runif(nrow(dist_edge_list_sub), 0, 2*pi)
   alpha <- sqrt(runif(nrow(dist_edge_list_sub), 0, 1))
-  sc_coord <- data.frame(id_raw=dist_edge_list_sub$Var1, id_new=make.names(dist_edge_list_sub$Var1, unique = T))
-  sc_coord$coord_x <- coord_df$coord_x[match(dist_edge_list_sub$Var2, rownames(coord_df))] + dist_edge_list_sub$val_rsc*sin(theta)*alpha
-  sc_coord$coord_y <- coord_df$coord_y[match(dist_edge_list_sub$Var2, rownames(coord_df))] + dist_edge_list_sub$val_rsc*cos(theta)*alpha
-
+  sc_coord$coord_x <- sc_coord$coord_x + dist_edge_list_sub$val_rsc*sin(theta)*alpha
+  sc_coord$coord_y <- sc_coord$coord_y + dist_edge_list_sub$val_rsc*cos(theta)*alpha
   ## Point repelling ##
   cat('Repelling points...\n')
-  sc_coord_df <- data.frame(sc_coord[, c('coord_x', 'coord_y')], repel_r=repel_r)
-  sc_repel <- packcircles::circleRepelLayout(sc_coord_df, sizetype='radius', maxiter=repel_iter)
+  sc_repel_input <- data.frame(sc_coord[, c('coord_x', 'coord_y')], repel_r=repel_r)
+  sc_repel <- packcircles::circleRepelLayout(sc_repel_input, sizetype='radius', maxiter=repel_iter)
   sc_coord$coord_x <- sc_repel$layout$x
   sc_coord$coord_y <- sc_repel$layout$y
-
-  return(sc_coord)
+  return(list(sc_coord_raw, sc_coord))
 }
 
 #' Title
@@ -229,7 +260,9 @@ celltrek_from_dist <- function (dist_mat, coord_df, dist_cut, top_spot=10, spot_
   colnames(coord_df) <- c('coord_x', 'coord_y')
   spot_dis <- median(unlist(dbscan::kNN(coord_df[, c('coord_x', 'coord_y')], k=4)$dist))
   if (is.null(repel_r)) {repel_r=spot_dis/4}
-  sc_coord <- celltrek_chart(dist_mat=dist_mat, coord_df=coord_df, dist_cut=dist_cut, top_spot=top_spot, spot_n=spot_n, repel_r=repel_r, repel_iter=repel_iter)
+  sc_coord_list <- celltrek_chart(dist_mat=dist_mat, coord_df=coord_df, dist_cut=dist_cut, top_spot=top_spot, spot_n=spot_n, repel_r=repel_r, repel_iter=repel_iter)
+  sc_coord_raw <- sc_coord_list[[1]]
+  sc_coord <- sc_coord_list[[2]]
   sc_out <- CreateSeuratObject(counts=sc_data[[sc_assay]]@data[, sc_coord$id_raw] %>% set_colnames(sc_coord$id_new),
                                project='celltrek', assay=sc_assay,
                                meta.data=sc_data@meta.data[sc_coord$id_raw, ] %>%
@@ -239,6 +272,10 @@ celltrek_from_dist <- function (dist_mat, coord_df, dist_cut, top_spot=10, spot_
   sc_out@meta.data <- dplyr::left_join(sc_out@meta.data, sc_coord) %>% data.frame %>% set_rownames(sc_out$id_new)
   sc_out[[sc_assay]]@data <- sc_out[[sc_assay]]@counts
   sc_out[[sc_assay]]@counts <- matrix(nrow = 0, ncol = 0)
+  sc_coord_raw_df <- CreateDimReducObject(embeddings=sc_coord_raw %>%
+                                            dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
+                                            dplyr::select(c(coord1, coord2)) %>% set_rownames(sc_coord_raw$id_new) %>% as.matrix,
+                                          assay=sc_assay, key='celltrek_raw')
   sc_coord_dr <- CreateDimReducObject(embeddings=sc_coord %>%
                                         dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
                                         dplyr::select(c(coord1, coord2)) %>% set_rownames(sc_coord$id_new) %>% as.matrix,
@@ -248,6 +285,7 @@ celltrek_from_dist <- function (dist_mat, coord_df, dist_cut, top_spot=10, spot_
   sc_umap_dr <- CreateDimReducObject(embeddings=sc_data@reductions$umap@cell.embeddings[sc_coord$id_raw, ] %>%
                                        set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='umap')
   sc_out@reductions$celltrek <- sc_coord_dr
+  sc_out@reductions$celltrek_raw <- sc_coord_raw_df
   sc_out@reductions$pca <- sc_pca_dr
   sc_out@reductions$umap <- sc_umap_dr
   if (!is.null(st_data)) {
@@ -290,8 +328,9 @@ celltrek <- function (st_sc_int, int_assay='traint', sc_data=NULL, sc_assay='RNA
   dist_res <- celltrek_dist(st_sc_int=st_sc_int, int_assay=int_assay, reduction=reduction, intp=intp, intp_pnt=intp_pnt, intp_lin=intp_lin, nPCs=nPCs, ntree=ntree, keep_model=T)
   spot_dis_intp <- median(unlist(dbscan::kNN(dist_res$coord_df[, c('coord_x', 'coord_y')], k=4)$dist))
   if (is.null(repel_r)) {repel_r=spot_dis_intp/4}
-  sc_coord <- celltrek_chart(dist_mat=dist_res$celltrek_dist, coord_df=dist_res$coord_df, dist_cut=ntree*dist_thresh, top_spot=top_spot, spot_n=spot_n, repel_r=repel_r, repel_iter=repel_iter)
-
+  sc_coord_list <- celltrek_chart(dist_mat=dist_res$celltrek_dist, coord_df=dist_res$coord_df, dist_cut=ntree*dist_thresh, top_spot=top_spot, spot_n=spot_n, repel_r=repel_r, repel_iter=repel_iter)
+  sc_coord_raw <- sc_coord_list[[1]]
+  sc_coord <- sc_coord_list[[2]]
   cat('Creating Seurat Object... \n')
   if (!is.null(sc_data)) {
     cat('sc data...')
@@ -306,17 +345,20 @@ celltrek <- function (st_sc_int, int_assay='traint', sc_data=NULL, sc_assay='RNA
 
     sc_out[[sc_assay]]@data <- sc_out[[sc_assay]]@counts
     sc_out[[sc_assay]]@counts <- matrix(nrow = 0, ncol = 0)
+    sc_coord_raw_df <- CreateDimReducObject(embeddings=sc_coord_raw %>%
+                                              dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
+                                              dplyr::select(c(coord1, coord2)) %>% set_rownames(sc_coord_raw$id_new) %>% as.matrix,
+                                            assay=sc_assay, key='celltrek_raw')
     sc_coord_dr <- CreateDimReducObject(embeddings=sc_coord %>%
                                           dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
-                                          dplyr::select(c(coord1, coord2)) %>%
-                                          set_rownames(sc_coord$id_new) %>%
-                                          as.matrix,
+                                          dplyr::select(c(coord1, coord2)) %>% set_rownames(sc_coord$id_new) %>% as.matrix,
                                         assay=sc_assay, key='celltrek')
     sc_pca_dr <- CreateDimReducObject(embeddings=sc_data@reductions$pca@cell.embeddings[sc_coord$id_raw, ] %>%
                                         set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='pca')
     sc_umap_dr <- CreateDimReducObject(embeddings=sc_data@reductions$umap@cell.embeddings[sc_coord$id_raw, ] %>%
                                          set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='umap')
     sc_out@reductions$celltrek <- sc_coord_dr
+    sc_out@reductions$celltrek_raw <- sc_coord_raw_df
     sc_out@reductions$pca <- sc_pca_dr
     sc_out@reductions$umap <- sc_umap_dr
   } else {

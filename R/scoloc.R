@@ -57,7 +57,6 @@ sp_grid_kern_bin <- function(data, coord, min_num=15, h, n=25, tot_norm=TRUE, Xl
     }
   }
 
-
   # data_out_zero <- matrix(0, n^2, length(col_rm)) %>% data.frame %>% set_colnames(names(col_rm))
   # if (length(col_rm)>0) {
   #   data_ <- data[, -col_rm]
