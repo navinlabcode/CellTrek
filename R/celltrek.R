@@ -375,6 +375,10 @@ celltrek <- function (st_sc_int, int_assay='traint', sc_data=NULL, sc_assay='RNA
 
     sc_out[[int_assay]]@counts <- matrix(nrow = 0, ncol = 0)
     sc_out[[int_assay]]@scale.data <- st_sc_int[[int_assay]]@scale.data[, sc_coord$id_raw] %>% set_colnames(sc_coord$id_new)
+    sc_coord_raw_df <- CreateDimReducObject(embeddings=sc_coord_raw %>%
+                                              dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
+                                              dplyr::select(c(coord1, coord2)) %>% set_rownames(sc_coord_raw$id_new) %>% as.matrix,
+                                            assay=sc_assay, key='celltrek_raw')
     sc_coord_dr <- CreateDimReducObject(embeddings = sc_coord %>%
                                           dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
                                           dplyr::select(c(coord1, coord2)) %>%
@@ -385,7 +389,9 @@ celltrek <- function (st_sc_int, int_assay='traint', sc_data=NULL, sc_assay='RNA
                                         set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='pca')
     sc_umap_dr <- CreateDimReducObject(embeddings = st_sc_int@reductions$umap@cell.embeddings[sc_coord$id_raw, ] %>%
                                          set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='umap')
+
     sc_out@reductions$celltrek <- sc_coord_dr
+    sc_out@reductions$celltrek_raw <- sc_coord_raw_df
     sc_out@reductions$pca <- sc_pca_dr
     sc_out@reductions$umap <- sc_umap_dr
   }
