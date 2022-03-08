@@ -1,5 +1,5 @@
 # A Quick Tour of CellTrek toolkit
-![](vignette_files/CellTrek_logo_redesign.png | width=50)
+![](vignette_files/CellTrek_logo_redesign.png|width=50px)
 
 # 1. Introduction and installation
 CellTrek is a computational framework that can directly map single cells back to their spatial coordinates in tissue sections based on scRNA-seq and ST data. This method provides a new paradigm that is distinct from ST deconvolution, enabling a more flexible and direct investigation of single cell data with spatial topography. The CellTrek toolkit also provides two downstream analysis modules, including SColoc for spatial colocalization analysis and SCoexp for spatial co-expression analysis.
