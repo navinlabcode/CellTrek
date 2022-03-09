@@ -1,6 +1,6 @@
 # A Quick Tour of CellTrek toolkit
 
-![](vignette_files/CellTrek_logo_redesign.png){:height="36px" width="36px"}
+![](vignette_files/CellTrek_logo_redesign.png){:height="10px" width="10px"}
 
 
 
