@@ -1,6 +1,6 @@
 # A Quick Tour of CellTrek toolkit
 
-<p align=“center”>
+<p align="center">
   <img width="100"  src="https://github.com/navinlabcode/CellTrek/blob/master/CellTrek_logo_redesign.png">
 </p>
 
