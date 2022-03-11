@@ -112,7 +112,7 @@ brain_celltrek_glut$cell_type %<>% factor(., levels=glut_cell)
 ```
 Then we can use scoloc module to perform colocalization analysis.
 ``` r
-brain_sgraph_KL <- CellTrek::scoloc(brain_celltrek_glut, col_cell='cell_type', cell_min=15, use_method='KL', eps=1e-50)
+brain_sgraph_KL <- CellTrek::scoloc(brain_celltrek_glut, col_cell='cell_type', use_method='KL', eps=1e-50)
 ```
 ``` r
 ## 1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20
