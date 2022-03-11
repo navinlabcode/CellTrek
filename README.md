@@ -3,7 +3,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-# 1. Introduction and installation
+## 1. Introduction and installation
 CellTrek is a computational framework that can directly map single cells back to their spatial coordinates in tissue sections based on scRNA-seq and ST data. This method provides a new paradigm that is distinct from ST deconvolution, enabling a more flexible and direct investigation of single cell data with spatial topography. The CellTrek toolkit also provides two downstream analysis modules, including SColoc for spatial colocalization analysis and SCoexp for spatial co-expression analysis.
 
 In this tutorial, we will demonstrate the cell charting workflow based on the mouse brain data as part of our paper Figure 2
@@ -11,7 +11,7 @@ In this tutorial, we will demonstrate the cell charting workflow based on the mo
 library(devtools)
 install_github("navinlabcode/CellTrek")
 ```
-# 2. Loading the packages and datasets (scRNA-seq and ST data)
+## 2. Loading the packages and datasets (scRNA-seq and ST data)
 We start by loading the packages needed for the analyses. Please install them if you haven't.
 ``` r
 options(stringsAsFactors = F)
@@ -55,7 +55,7 @@ DimPlot(brain_sc, label = T, label.size = 4.5)
 ```
 ![](vignette_files/F2_SC_dimplot.png)
 
-# 3. Cell charting using CellTrek
+## 3. Cell charting using CellTrek
 We first co-embed ST and scRNA-seq datasets using *traint*
 ``` r
 brain_traint <- CellTrek::traint(st_data=brain_st_cortex, sc_data=brain_sc, sc_assay='RNA', cell_names='cell_type')
