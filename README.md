@@ -183,7 +183,7 @@ Next we investigate the module scores at the spatial level.
 ``` r
 SpatialFeaturePlot(brain_celltrek_l5, grep('CC_', colnames(brain_celltrek_l5@meta.data), value=T))
 ``` 
-![](vignette_files/F9_modulescore_celltrek.png)
+![](vignette_files/F9_modulescore_schart.png)
 ``` r
 sessionInfo()
 ```
