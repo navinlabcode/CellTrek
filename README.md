@@ -1,7 +1,7 @@
 # A Quick Tour of CellTrek toolkit
 
 <p align="center">
-  <img width="100"  src="https://github.com/navinlabcode/CellTrek/blob/master/CellTrek_logo_redesign.png">
+  <img width="200"  src="https://github.com/navinlabcode/CellTrek/blob/master/CellTrek_logo_redesign.png">
 </p>
 
 # 1. Introduction and installation
