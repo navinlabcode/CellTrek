@@ -2,7 +2,7 @@
 % Please edit documentation in R/scoloc_vis.R
 \name{scoloc_vis}
 \alias{scoloc_vis}
-\title{Title}
+\title{Title Visualization of SColoc results}
 \usage{
 scoloc_vis(adj_mat, meta_data = NULL, directed = F)
 }
@@ -17,7 +17,7 @@ scoloc_vis(adj_mat, meta_data = NULL, directed = F)
 shiny app
 }
 \description{
-Title
+Title Visualization of SColoc results
 }
 \examples{
 scoloc_vis(scoloc_test)

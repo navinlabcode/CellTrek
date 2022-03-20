@@ -2,7 +2,7 @@
 % Please edit documentation in R/celltrek.R
 \name{celltrek}
 \alias{celltrek}
-\title{Title}
+\title{Title The core function of CellTrek}
 \usage{
 celltrek(
   st_sc_int,
@@ -63,7 +63,7 @@ celltrek(
 Seurat object
 }
 \description{
-Title
+Title The core function of CellTrek
 }
 \examples{
 celltrek_res <- celltrek(st_sc_int, int_assay='traint', sc_data=NULL, sc_assay='RNA', reduction='pca', intp=T, intp_pnt=10000, intp_lin=F, nPCs=30, ntree=1000, dist_thresh=.4, top_spot=10, spot_n=10, r=NULL, keep_model=F, ...)

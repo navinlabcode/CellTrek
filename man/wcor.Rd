@@ -2,7 +2,7 @@
 % Please edit documentation in R/scoexp.R
 \name{wcor}
 \alias{wcor}
-\title{Title}
+\title{Title Weighted cross correlation}
 \usage{
 wcor(X, W, method = c("pearson", "spearman")[1], na_zero = T)
 }
@@ -19,7 +19,7 @@ wcor(X, W, method = c("pearson", "spearman")[1], na_zero = T)
 Weighted correlation matrix, p X p
 }
 \description{
-Title
+Title Weighted cross correlation
 }
 \examples{
 wcor(X=expr_test, W=rbfk_out, method='spearman')

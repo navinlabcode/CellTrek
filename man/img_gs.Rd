@@ -7,7 +7,7 @@
 img_gs(img)
 }
 \arguments{
-\item{img}{Image data}
+\item{img}{Image data with RGB-channels}
 }
 \value{
 A gray scale image
