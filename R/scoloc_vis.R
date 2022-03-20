@@ -1,4 +1,4 @@
-#' Title
+#' Title Visualization of SColoc results
 #'
 #' @param adj_mat Adjacent matrix
 #' @param meta_data Optional, must contain id column match with adj_mat col/rownames
@@ -6,6 +6,13 @@
 #'
 #' @return shiny app
 #' @export
+#'
+#' @import reshape2
+#' @import magrittr
+#' @import shiny
+#' @import dplyr
+#' @import ggpubr
+#' @import visNetwork
 #'
 #' @examples scoloc_vis(scoloc_test)
 scoloc_vis <- function(adj_mat, meta_data=NULL, directed=F) {

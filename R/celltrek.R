@@ -1,4 +1,4 @@
-#' ST and SC data integration using Seurat transfer anchors
+#' Title Co-embedding ST and SC data using Seurat transfer anchors
 #'
 #' @param st_data Seurat ST data object
 #' @param sc_data Seurat SC data object
@@ -10,8 +10,12 @@
 #' @param gene_kept selected genes to be kept during integration
 #' @param norm normalization method: LogNormalize/SCTransform
 #'
-#' @return Seurat object of SC-ST co-embeddings
+#'
+#' @return Seurat object of SC-ST co-embedding
 #' @export
+#'
+#' @import Seurat
+#' @import dplyr
 #'
 #' @examples
 #' st_sc_traint <- traint(st_data=brain_st, sc_data=brain_sc, st_assay='Spatial', sc_assay='scint', nfeatures=2000, cell_names='cell_names', coord_xy=c('imagerow', 'imagecol'), gene_kept=NULL)
@@ -34,7 +38,7 @@ traint <- function (st_data, sc_data, st_assay='Spatial', sc_assay='scint', norm
 
   ## Integration features ##
   sc_st_list <- list(st_data=st_data, sc_data=sc_data)
-  sc_st_features <- SelectIntegrationFeatures(sc_st_list, nfeatures=nfeatures)
+  sc_st_features <- Seurat::SelectIntegrationFeatures(sc_st_list, nfeatures=nfeatures)
   if (!is.null(gene_kept)) {
     sc_st_features <- union(sc_st_features, gene_kept)
   }
@@ -49,9 +53,8 @@ traint <- function (st_data, sc_data, st_assay='Spatial', sc_assay='scint', norm
                                                normalization.method = norm, features = sc_st_features, reduction = 'cca', ...)
 
   cat('Data transfering... \n')
-  st_data_trans <- TransferData(anchorset = sc_st_anchors,
-                                refdata = GetAssayData(sc_data, assay = sc_assay, slot='data')[sc_st_features, ],
-                                weight.reduction = 'cca')
+  st_data_trans <- Seurat::TransferData(anchorset = sc_st_anchors,
+                                        refdata = GetAssayData(sc_data, assay = sc_assay, slot='data')[sc_st_features, ], weight.reduction = 'cca')
   st_data@assays$transfer <- st_data_trans
 
   cat('Creating new Seurat object... \n')
@@ -84,6 +87,9 @@ traint <- function (st_data, sc_data, st_assay='Spatial', sc_assay='scint', norm
 #' @return CellTrek(Seurat) object
 #' @export
 #'
+#' @import Seurat
+#' @importFrom packcircles circleRepelLayout
+#'
 #' @examples
 celltrek_repel <- function(celltrek_inp, repel_r=5, repel_iter=10) {
   celltrek_dr_raw <- Embeddings(celltrek_inp, 'celltrek_raw')
@@ -98,7 +104,7 @@ celltrek_repel <- function(celltrek_inp, repel_r=5, repel_iter=10) {
 
   ## Repelling ##
   cat('Repelling points...\n')
-  celltrek_repel <- packcircles::circleRepelLayout(repel_input, sizetype='radius', maxiter=repel_iter)
+  celltrek_repel <- circleRepelLayout(repel_input, sizetype='radius', maxiter=repel_iter)
   celltrek_dr[, 1] <- celltrek_repel$layout$x
   celltrek_dr[, 2] <- celltrek_repel$layout$y
   celltrek_out <- celltrek_inp
@@ -119,6 +125,12 @@ celltrek_repel <- function(celltrek_inp, repel_r=5, repel_iter=10) {
 #' @param keep_model If TRUE, return the trained random forest model
 #'
 #' @return A list of 1. celltrek_distance matrix; 2. trained random forest model (optional)
+#'
+#' @import dbscan
+#' @importFrom akima interpp
+#' @import magrittr
+#' @import dplyr
+#' @import randomForestSRC
 #'
 #' @examples dist_test <- celltrek_dist(st_sc_int=st_sc_int, int_assay='traint', reduction='pca', intp = T, intp_pnt=10000, intp_lin=F, nPCs=30, ntree=1000, keep_model=T)
 celltrek_dist <- function (st_sc_int, int_assay='traint', reduction='pca', intp = T, intp_pnt=10000, intp_lin=F, nPCs=30, ntree=1000, keep_model=T) {
@@ -204,6 +216,12 @@ celltrek_dist <- function (st_sc_int, int_assay='traint', reduction='pca', intp 
 #'
 #' @return SC coordinates
 #'
+#' @import data.table
+#' @import scales
+#' @import dplyr
+#' @importFrom packcircles circleRepelLayout
+#'
+#'
 #' @examples chart_test <- function (dist_mat, coord_df, dist_cut=500, top_spot=10, spot_n=10, r=50)
 celltrek_chart <- function (dist_mat, coord_df, dist_cut=500, top_spot=10, spot_n=10, repel_r=5, repel_iter=10) {
   cat('Making graph... \n')
@@ -239,7 +257,7 @@ celltrek_chart <- function (dist_mat, coord_df, dist_cut=500, top_spot=10, spot_
   return(list(sc_coord_raw, sc_coord))
 }
 
-#' Title
+#' Title CellTrek from a pre-computed SC-ST distance matrix
 #'
 #' @param dist_mat Distance matrix of sc-st (sc in rows and st in columns)
 #' @param coord_df Coordinates data frame of st (must contain two columns as coord_x, coord_y and rownames as barcodes)
@@ -254,6 +272,10 @@ celltrek_chart <- function (dist_mat, coord_df, dist_cut=500, top_spot=10, spot_
 #'
 #' @return A list of 1.Seurat object
 #' @export
+#'
+#' @import dbscan
+#' @import Seurat
+#' @import dplyr
 #'
 #' @examples celltrek_res <- celltrek_from_dist(dist_mat, coord_df, dist_cut, top_spot=10, spot_n=10, r=NULL, sc_data, sc_assay='RNA')
 celltrek_from_dist <- function (dist_mat, coord_df, dist_cut, top_spot=10, spot_n=10, repel_r=5, repel_iter=10, sc_data, sc_assay='RNA', st_data=NULL) {
@@ -298,7 +320,7 @@ celltrek_from_dist <- function (dist_mat, coord_df, dist_cut, top_spot=10, spot_
   return(output)
 }
 
-#' Title
+#' Title The core function of CellTrek
 #'
 #' @param st_sc_int Seurat traint object
 #' @param int_assay Integration assay ('traint')
@@ -320,6 +342,11 @@ celltrek_from_dist <- function (dist_mat, coord_df, dist_cut, top_spot=10, spot_
 #'
 #' @return Seurat object
 #' @export
+#'
+#' @import dbscan
+#' @import Seurat
+#' @import dplyr
+#' @import magrittr
 #'
 #' @examples celltrek_res <- celltrek(st_sc_int, int_assay='traint', sc_data=NULL, sc_assay='RNA', reduction='pca', intp=T, intp_pnt=10000, intp_lin=F, nPCs=30, ntree=1000, dist_thresh=.4, top_spot=10, spot_n=10, r=NULL, keep_model=F, ...)
 celltrek <- function (st_sc_int, int_assay='traint', sc_data=NULL, sc_assay='RNA', reduction='pca',

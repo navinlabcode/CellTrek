@@ -5,6 +5,10 @@
 #'
 #' @return dummy data frame with cells on columns
 #'
+#' @import dplyr
+#' @import tidyr
+#' @import magrittr
+#'
 #' @examples cell_dummy_df <- as_dummy_df(celltrek_df, col_cell='Cell')
 as_dummy_df <- function(data_inp, col_cell='cell_names') {
   cell_names <- sort(as.character(unique(data_inp[, col_cell])))
@@ -42,6 +46,11 @@ euc_dist <- function(x1, x2) {sqrt(sum((x1 - x2) ^ 2))}
 #' @param Ylim The limits of Y-axis
 #'
 #' @return Kenerl density on grid
+#'
+#' @import MASS
+#' @import magrittr
+#' @import reshape2
+#'
 #'
 #' @examples kern_res <- sp_grid_kern_bin(data=cell_dummy_df, coord=coord_df, h=150, n=25, tot_norm=TRUE, Xlim=range(coord_df$X), Ylim=range(coor_df$Y))
 sp_grid_kern_bin <- function(data, coord, min_num=15, h, n=25, tot_norm=TRUE, Xlim=range(coord[, 1]), Ylim=range(coord[, 2])) {
@@ -93,6 +102,8 @@ sp_grid_kern_bin <- function(data, coord, min_num=15, h, n=25, tot_norm=TRUE, Xl
 #'
 #' @return KL-divergence matrix
 #'
+#' @import philentropy
+#'
 #' @examples KL_res <- KL_(X=X, eps=1e-20)
 KL_ <- function(X, eps=1e-20) {
   ## Need Suppress print-outs ##
@@ -123,6 +134,9 @@ KL_ <- function(X, eps=1e-20) {
 #'
 #' @return A list of 1. Bootstrap KL-divergence; 2. MST consensus matrix
 #'
+#' @import magrittr
+#' @import igraph
+#'
 #' @examples boot_mst_res <- KL_boot_mst(dummy_df=cell_type_dummy, coord_df=range(coord_df$X), Xlim=range(coord_df$Y), boot_n=100, prop=0.8, h=150, n=25, tot_norm=T, eps=1e-20)
 KL_boot_mst <- function(dummy_df, coord_df, min_num=15, Xlim=range(coord_df[, 1]), Ylim=range(coord_df[, 2]), boot_n=100, prop=0.8, replace=T, h=150, n=25, tot_norm=T, eps=1e-20) {
   n_smp <- nrow(dummy_df)
@@ -140,10 +154,6 @@ KL_boot_mst <- function(dummy_df, coord_df, min_num=15, Xlim=range(coord_df[, 1]
     coord_boot <- coord_df[idx, ]
     k2d_boot <- sp_grid_kern_bin(data=data_boot, coord=coord_boot, min_num=min_num, Xlim=Xlim, Ylim=Ylim, h=h, n=n, tot_norm=tot_norm)
     dis_boot <- k2d_boot[, -c(1, 2)] %>% KL_(., eps=eps)
-    # dis_boot <- k2d_boot[, -c(1, 2)] %>% KL_(., eps=1e-20)
-    ##
-    # dis_boot <- 1-k2d_boot[, -c(1, 2)] %>% cor(method='spearman')
-    ##
     dis_boot_array[, , i] <- dis_boot
     ## MST ##
     mst_boot <- igraph::graph.adjacency(dis_boot, weighted=T, mode='upper') %>% igraph::mst(., algorithm='prim') %>%
@@ -156,7 +166,7 @@ KL_boot_mst <- function(dummy_df, coord_df, min_num=15, Xlim=range(coord_df[, 1]
   return(output)
 }
 
-#' Title Build delaunay triangulation network
+#' Title Build Delaunay triangulation network
 #'
 #' @param coord_df Coordinates df
 #' @param return_name Return edge list with names?
@@ -164,6 +174,8 @@ KL_boot_mst <- function(dummy_df, coord_df, min_num=15, Xlim=range(coord_df[, 1]
 #'
 #' @return Delaunay triangulation network edge list
 #' @export
+#'
+#' @importFrom geometry delaunayn
 #'
 #' @examples test <- build_delaunayn(coord_df, return_name=T)
 build_delaunayn <- function(coord_df, return_name=T, dist_cutoff=NULL) {
@@ -191,6 +203,10 @@ build_delaunayn <- function(coord_df, return_name=T, dist_cutoff=NULL) {
 #' @param col_cell Column name of cell type, cell type names must be syntactically valid
 #'
 #' @return A list of 1.Network-based cell co-occurrence; 2.Cell co-occurrence log odds ratio
+#'
+#' @import dplyr
+#' @import tidyr
+#' @import magrittr
 #'
 #' @examples test <- edge_odds(el_inp, meta_data, col_cell='cell_names')
 edge_odds <- function(el_inp, meta_data, col_cell='cell_names') {
@@ -238,6 +254,10 @@ edge_odds <- function(el_inp, meta_data, col_cell='cell_names') {
 #' @param replace should sampling be with replacement?
 #'
 #' @return A list of 1. Bootstrap logOR distance; 2. MST consensus matrix
+#' @import magrittr
+#' @import tibble
+#' @import tidyr
+#' @import igraph
 #'
 #' @examples test <- DT_boot_mst(meta_df, coord_df, col_cell='cell_names', boot_n=100, prop=.8)
 DT_boot_mst <- function(meta_df, coord_df, col_cell='cell_names', boot_n=100, prop=.8, replace=T, dist_cutoff=NULL) {
@@ -284,6 +304,10 @@ DT_boot_mst <- function(meta_df, coord_df, col_cell='cell_names', boot_n=100, pr
 #'
 #' @return A list of 1. Bootstrap logOR distance; 2. MST consensus matrix
 #'
+#' @import magrittr
+#' @import dplyr
+#' @import igraph
+#'
 #' @examples test <- KD_boot_mst(meta_df, coord_df, col_cell='cell_names', boot_n=100, prop=.8, eps=1e-5)
 KD_boot_mst <- function(meta_df, coord_df, col_cell='cell_names', boot_n=100, prop=.8, replace=T, k=10) {
   cell_names <- unique(meta_df[, col_cell]) %>% sort
@@ -329,6 +353,9 @@ KD_boot_mst <- function(meta_df, coord_df, col_cell='cell_names', boot_n=100, pr
 #'
 #' @return A list of 1. kdist data frame and 2. a list of knn id matrix
 #' @export
+#'
+#' @import dbscan
+#' @import magrittr
 #'
 #' @examples kdist_out <- kdist(inp_df=test_df, ref=c('A', 'B', 'C'), ref_type='each', que=unique(test_df$cell_names), k=10, keep_nn=T)
 kdist <- function(inp_df, ref=NULL, ref_type='all', que=NULL, k=10, new_name='kdist', keep_nn=F) {
@@ -389,6 +416,10 @@ kdist <- function(inp_df, ref=NULL, ref_type='all', que=NULL, k=10, new_name='kd
 #' @return SChart seurat output
 #' @export
 #'
+#' @import dplyr
+#' @import magrittr
+#' @import Seurat
+#'
 #' @examples celltrek_test <- run_kdist(celltrek_inp=celltrek_inp, grp_col='cell_type', ref=c('A', 'B'), ref_type='each', que=unique(test_df$cell_names), k=10)
 run_kdist <- function(celltrek_inp, grp_col='cell_type', ref=NULL, ref_type='all', que=NULL, k=10, new_name='kdist', keep_nn=F) {
   ## Check ##
@@ -411,6 +442,7 @@ run_kdist <- function(celltrek_inp, grp_col='cell_type', ref=NULL, ref_type='all
 #'
 #' @return A list of 1.Bootstrap distance; 2.MST consensus matrix
 #' @export
+#'
 #'
 #' @examples cell_scoloc <- scoloc(celltrek_inp, col_cell='cell_names', use_method='KL', h=140, n=25)
 scoloc <- function(celltrek_inp, col_cell='cell_names', use_method=c('KL', 'DT', 'KD')[2], h=celltrek_inp@images[[1]]@scale.factors$spot_dis, n=25, boot_n=20, ...) {

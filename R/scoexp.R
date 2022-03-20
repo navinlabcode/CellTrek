@@ -13,7 +13,7 @@ rbfk <- function (dis_mat, sigm, zero_diag=T) {
   return(rbfk_out)
 }
 
-#' Title
+#' Title Weighted cross correlation
 #'
 #' @param X Expression matrix, n X p
 #' @param W Weight matrix, n X n
@@ -22,6 +22,8 @@ rbfk <- function (dis_mat, sigm, zero_diag=T) {
 #'
 #' @return Weighted correlation matrix, p X p
 #' @export
+#'
+#' @import magrittr
 #'
 #' @examples wcor(X=expr_test, W=rbfk_out, method='spearman')
 wcor <- function(X, W, method=c('pearson', 'spearman')[1], na_zero=T) {
@@ -44,6 +46,7 @@ wcor <- function(X, W, method=c('pearson', 'spearman')[1], na_zero=T) {
 #' @param na_diag
 #'
 #' @return
+#'
 #'
 #' @examples cor_remove(cor_mat, ave_cor_cut = 0.5, min_n=10, max_n=100, na_diag=F)
 cor_remove <- function (cor_mat, ave_cor_cut = 0.5, min_n=5, max_n=100, na_diag=F) {
@@ -82,6 +85,8 @@ cor_remove <- function (cor_mat, ave_cor_cut = 0.5, min_n=5, max_n=100, na_diag=
 #' @return
 #' @export
 #'
+#' @import ConsensusClusterPlus
+#'
 #' @examples cc_wrapper(d, maxK=8, reps=20, distance='spearman', verbose=T)
 cc_wrapper <- function(d, maxK=8, reps=20, distance='spearman', verbose=F, plot='png', ...) {
   cc_output <- ConsensusClusterPlus::ConsensusClusterPlus(d, maxK=maxK, reps=reps, distance=distance, verbose=verbose, plot=plot, ...)
@@ -99,6 +104,8 @@ cc_wrapper <- function(d, maxK=8, reps=20, distance='spearman', verbose=F, plot=
 #' @param max_gen
 #'
 #' @return
+#'
+#' @import magrittr
 #'
 #' @examples cc_gene_k(cc_res, cor_mat, k=8, avg_con_min=.5, avg_cor_min=.5, min_gen=20, max_gen=100)
 cc_gene_k <- function(cc_res, cor_mat, k=8, avg_con_min=.5, avg_cor_min=.5, min_gen=10, max_gen=100) {
@@ -132,6 +139,11 @@ cc_gene_k <- function(cc_res, cor_mat, k=8, avg_con_min=.5, avg_cor_min=.5, min_
 #'
 #' @return
 #' @export
+#'
+#' @import WGCNA
+#' @import purrr
+#' @import fastcluster
+#' @import dynamicTreeCut
 #'
 #' @examples wgcna_wrapper(sim_mat, powerVector=c(1:20), minClusterSize=50)
 wgcna_wrapper <- function(sim_mat, powerVector=c(1:20), minClusterSize=50, ...) {
@@ -205,6 +217,9 @@ wgcna_gene_k <- function(wgcna_res, cor_mat, avg_cor_min=.5, min_gen=10, max_gen
 #'
 #' @return
 #' @export
+#'
+#' @import Seurat
+#' @import magrittr
 #'
 #' @examples scoexp(celltrek_inp, sigm=NULL, assay='RNA', gene_select=NULL, zero_cutoff=5, cor_method='spearman', approach=c('cc', 'wgcna')[1], maxK=8, k=8, avg_con_min=.5, avg_cor_min=.5, min_gen=20, max_gen=100, keep_cc=T, keep_wgcna=T, keep_kern=T, keep_wcor=T)
 scoexp <- function(celltrek_inp, sigm=NULL, assay='RNA', gene_select=NULL, zero_cutoff=5, cor_method='spearman', approach=c('cc', 'wgcna')[1], maxK=8, k=8, avg_con_min=.5, avg_cor_min=.5, min_gen=20, max_gen=100, keep_cc=T, keep_wgcna=T, keep_kern=T, keep_wcor=T, ...) {

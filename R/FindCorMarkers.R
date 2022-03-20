@@ -1,12 +1,14 @@
-#' Title
+#' Title Find highly correlated markers to target features
 #'
 #' @param srt_inp Seurat input
-#' @param assay 
+#' @param assay
 #' @param features Features that genes correlated with
 #' @param method Correlation method
 #'
 #' @return
 #' @export
+#'
+#' @import magrittr
 #'
 #' @examples CorMarkers <- FindCorMarkers(srt_inp=test_seurat, assay='RNA', features=c('k_dist', 'sig_score'), method='spearman')
 FindCorMarkers <- function(srt_inp, assay='RNA', features, method='spearman') {

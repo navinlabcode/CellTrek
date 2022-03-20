@@ -1,6 +1,6 @@
 #' Convert RGB image to gray scale image
 #'
-#' @param img Image data
+#' @param img Image data with RGB-channels
 #'
 #' @return A gray scale image
 #' @export
@@ -20,6 +20,10 @@ img_gs <- function (img) {
 #'
 #' @return Shiny GUI
 #' @export
+#'
+#' @import shiny
+#' @import plotly
+#' @import RColorBrewer
 #'
 #' @examples celltrek_vis(test_celltrek@meta.data, test_celltrek@images[[1]]@image, scale_fac=test_celltrek@images[[1]]@scale.factors$lowres)
 celltrek_vis <- function(celltrek_df, img, scale_fac) {
