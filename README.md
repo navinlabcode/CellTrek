@@ -13,24 +13,10 @@ We start by loading the packages needed for the analyses. Please install them if
 ``` r
 options(stringsAsFactors = F)
 library("CellTrek")
-library("akima")
-library("randomForestSRC")
-library("packcircles")
 library("dplyr")
-library("magrittr")
-library("dbscan")
-library("pheatmap")
-library("spatstat")
 library("Seurat")
-library("SeuratData")
-library("reshape2")
-library("visNetwork")
-library("shiny")
-library("plotly")
 library("viridis")
-library("RColorBrewer")
 library("ConsensusClusterPlus")
-library("philentropy")
 
 ```
 We then load mouse brain scRNA-seq and ST data, respectively. For ST data, we only used the frontal cortex region for this study. For scRNA-seq data, if you are running the code on a personal laptop, you may need to subset the scRNA-seq data to hundreds of cells since it will cost several minutes for using the whole scRNA-seq data in the CellTrek step.
@@ -105,7 +91,7 @@ We first subset the glutamatergic neuron cell types from our charting result.
 glut_cell <- c('L2/3 IT', 'L4', 'L5 IT', 'L5 PT', 'NP', 'L6 IT', 'L6 CT',  'L6b')
 names(glut_cell) <- make.names(glut_cell)
 brain_celltrek_glut <- subset(brain_celltrek, subset=cell_type %in% glut_cell)
-brain_celltrek_glut$cell_type %<>% factor(., levels=glut_cell)
+brain_celltrek_glut$cell_type <- factor(brain_celltrek_glut$cell_type, levels=glut_cell)
 ```
 Then we can use scoloc module to perform colocalization analysis.
 ``` r
@@ -118,13 +104,16 @@ brain_sgraph_KL <- CellTrek::scoloc(brain_celltrek_glut, col_cell='cell_type', u
 ## We extract the minimum spanning tree (MST) result from the graph
 brain_sgraph_KL_mst_cons <- brain_sgraph_KL$mst_cons
 rownames(brain_sgraph_KL_mst_cons) <- colnames(brain_sgraph_KL_mst_cons) <- glut_cell[colnames(brain_sgraph_KL_mst_cons)]
-brain_cell_class <- brain_celltrek@meta.data %>% dplyr::select(id=cell_type, class=class) %>% unique
+## We then extract the metadata (including cell types and their frequencies)
+brain_cell_class <- brain_celltrek@meta.data %>% dplyr::select(id=cell_type) %>% unique
+brain_celltrek_count <- data.frame(freq = table(brain_celltrek$cell_type))
+brain_cell_class_new <- merge(brain_cell_class, brain_celltrek_count, by.x ="id", by.y = "freq.Var1")
 ```
 Next, we can visualize the colocalization result. Feel free to adjust the edge value cutoff.
 ``` r
 CellTrek::scoloc_vis(brain_sgraph_KL_mst_cons, meta_data=brain_cell_class)
 ```
-![](vignette_files/F5_scoloc_vis.png)
+![](vignette_files/F5_scoloc_vis_updated.png)
 # 5. Spatial-weighted gene co-expression analysis within the cell type of interest
 Based on the CellTrek result, we can further investigate the co-expression patterns within the cell type of interest using SCoexp module. Here, we will take L5 IT cells as an example using consensus clustering (CC) method.
 L5 IT cells first are extracted from the charting result.
@@ -160,7 +149,7 @@ We can visualize the co-expression modules using heatmap.
 ``` r
 brain_celltrek_l5_k <- rbind(data.frame(gene=c(brain_celltrek_l5_scoexp_res_cc$gs[[1]]), G='K1'), 
                            data.frame(gene=c(brain_celltrek_l5_scoexp_res_cc$gs[[2]]), G='K2')) %>% 
-                           set_rownames(.$gene) %>% dplyr::select(-1)
+                           magrittr::set_rownames(.$gene) %>% dplyr::select(-1)
 pheatmap::pheatmap(brain_celltrek_l5_scoexp_res_cc$wcor[rownames(brain_celltrek_l5_k), rownames(brain_celltrek_l5_k)], 
                    clustering_method='ward.D2', annotation_row=brain_celltrek_l5_k, show_rownames=F, show_colnames=F, 
                    treeheight_row=10, treeheight_col=10, annotation_legend = T, fontsize=8,
