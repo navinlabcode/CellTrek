@@ -254,6 +254,7 @@ edge_odds <- function(el_inp, meta_data, col_cell='cell_names') {
 #' @param replace should sampling be with replacement?
 #'
 #' @return A list of 1. Bootstrap logOR distance; 2. MST consensus matrix
+#'
 #' @import magrittr
 #' @import tibble
 #' @import tidyr

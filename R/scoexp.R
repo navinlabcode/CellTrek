@@ -85,7 +85,6 @@ cor_remove <- function (cor_mat, ave_cor_cut = 0.5, min_n=5, max_n=100, na_diag=
 #' @return
 #' @export
 #'
-#' @import ConsensusClusterPlus
 #'
 #' @examples cc_wrapper(d, maxK=8, reps=20, distance='spearman', verbose=T)
 cc_wrapper <- function(d, maxK=8, reps=20, distance='spearman', verbose=F, plot='png', ...) {
@@ -140,7 +139,6 @@ cc_gene_k <- function(cc_res, cor_mat, k=8, avg_con_min=.5, avg_cor_min=.5, min_
 #' @return
 #' @export
 #'
-#' @import WGCNA
 #' @import purrr
 #' @import fastcluster
 #' @import dynamicTreeCut

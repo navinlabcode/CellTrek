@@ -221,8 +221,7 @@ celltrek_dist <- function (st_sc_int, int_assay='traint', reduction='pca', intp 
 #' @import dplyr
 #' @importFrom packcircles circleRepelLayout
 #'
-#'
-#' @examples chart_test <- function (dist_mat, coord_df, dist_cut=500, top_spot=10, spot_n=10, r=50)
+#' @examples
 celltrek_chart <- function (dist_mat, coord_df, dist_cut=500, top_spot=10, spot_n=10, repel_r=5, repel_iter=10) {
   cat('Making graph... \n')
   dist_mat[dist_mat>dist_cut] <- NA
