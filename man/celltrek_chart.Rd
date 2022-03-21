@@ -35,6 +35,3 @@ SC coordinates
 \description{
 Title
 }
-\examples{
-chart_test <- function (dist_mat, coord_df, dist_cut=500, top_spot=10, spot_n=10, r=50)
-}
