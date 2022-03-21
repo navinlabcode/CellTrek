@@ -1,16 +1,39 @@
 Package: CellTrek
-Title: What the Package Does (One Line, Title Case)
+Title: Spatial Charting of Single Cell Transcriptomes in Tissues
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
-           role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+    person("Runmin", 'Wei', email='wander1021@gmail.com', role=c('aut', 'cre'))
+    person("Siyuan", 'He', email='SHe2@mdanderson.org', role=c('aut', 'ctb'))
+Description: CellTrek is a computational toolkit that can directly map single cells back to their spatial coordinates in tissue sections based on scRNA-seq and ST data. The CellTrek toolkit also provides two downstream analysis modules, including SColoc for spatial colocalization analysis and SCoexp for spatial co-expression analysis.
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
 Encoding: UTF-8
-LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
+Imports: 
+    akima,
+    ConsensusClusterPlus,
+    data.table,
+    dbscan,
+    dplyr,
+    dynamicTreeCut,
+    fastcluster,
+    geometry,
+    ggpubr,
+    igraph,
+    magrittr,
+    MASS,
+    packcircles,
+    philentropy,
+    plotly,
+    purrr,
+    randomForestSRC,
+    RColorBrewer,
+    reshape2,
+    scales,
+    Seurat,
+    shiny,
+    tibble,
+    tidyr,
+    visNetwork,
+    WGCNA
