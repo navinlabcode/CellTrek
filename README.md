@@ -27,6 +27,10 @@ You can download the ST data here: https://www.dropbox.com/s/azjysbt7lbpmbew/bra
 ``` r
 brain_st_cortex <- readRDS("brain_st_cortex.rds")
 brain_sc <- readRDS("brain_sc.rds")
+
+brain_st_cortex <- RenameCells(brain_st_cortex, new.names=make.names(Cells(brain_st_cortex)))
+brain_sc <- RenameCells(brain_sc, new.names=make.names(Cells(brain_sc)))
+
 ## Visualize the ST data
 SpatialDimPlot(brain_st_cortex)
 ```
