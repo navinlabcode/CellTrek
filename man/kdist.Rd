@@ -2,7 +2,7 @@
 % Please edit documentation in R/scoloc.R
 \name{kdist}
 \alias{kdist}
-\title{Title Calculated K-distance between query cells and reference cells based on their spatial coordinates}
+\title{Calculated K-distance between query cells and reference cells based on their spatial coordinates}
 \usage{
 kdist(
   inp_df,
@@ -33,7 +33,7 @@ kdist(
 A list of 1. kdist data frame and 2. a list of knn id matrix
 }
 \description{
-Title Calculated K-distance between query cells and reference cells based on their spatial coordinates
+Calculated K-distance between query cells and reference cells based on their spatial coordinates
 }
 \examples{
 kdist_out <- kdist(inp_df=test_df, ref=c('A', 'B', 'C'), ref_type='each', que=unique(test_df$cell_names), k=10, keep_nn=T)

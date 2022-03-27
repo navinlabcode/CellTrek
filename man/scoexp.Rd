@@ -2,7 +2,7 @@
 % Please edit documentation in R/scoexp.R
 \name{scoexp}
 \alias{scoexp}
-\title{Title SCoexp module}
+\title{SCoexp module}
 \usage{
 scoexp(
   celltrek_inp,
@@ -40,7 +40,7 @@ scoexp(
 
 }
 \description{
-Title SCoexp module
+SCoexp module
 }
 \examples{
 scoexp(celltrek_inp, sigm=NULL, assay='RNA', gene_select=NULL, zero_cutoff=5, cor_method='spearman', approach=c('cc', 'wgcna')[1], maxK=8, k=8, avg_con_min=.5, avg_cor_min=.5, min_gen=20, max_gen=100, keep_cc=T, keep_wgcna=T, keep_kern=T, keep_wcor=T)

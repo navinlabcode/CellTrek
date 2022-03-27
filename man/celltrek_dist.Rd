@@ -2,7 +2,7 @@
 % Please edit documentation in R/celltrek.R
 \name{celltrek_dist}
 \alias{celltrek_dist}
-\title{Title Calculate the RF-distance between sc and st}
+\title{Calculate the RF-distance between sc and st}
 \usage{
 celltrek_dist(
   st_sc_int,
@@ -39,7 +39,7 @@ celltrek_dist(
 A list of 1. celltrek_distance matrix; 2. trained random forest model (optional)
 }
 \description{
-Title Calculate the RF-distance between sc and st
+Calculate the RF-distance between sc and st
 }
 \examples{
 dist_test <- celltrek_dist(st_sc_int=st_sc_int, int_assay='traint', reduction='pca', intp = T, intp_pnt=10000, intp_lin=F, nPCs=30, ntree=1000, keep_model=T)

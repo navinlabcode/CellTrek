@@ -2,7 +2,7 @@
 % Please edit documentation in R/scoloc.R
 \name{run_kdist}
 \alias{run_kdist}
-\title{Title Run K-distance with CellTrek(Seurat) object and add a metadata column}
+\title{Run K-distance with CellTrek(Seurat) object and add a metadata column}
 \usage{
 run_kdist(
   celltrek_inp,
@@ -36,7 +36,7 @@ run_kdist(
 SChart seurat output
 }
 \description{
-Title Run K-distance with CellTrek(Seurat) object and add a metadata column
+Run K-distance with CellTrek(Seurat) object and add a metadata column
 }
 \examples{
 celltrek_test <- run_kdist(celltrek_inp=celltrek_inp, grp_col='cell_type', ref=c('A', 'B'), ref_type='each', que=unique(test_df$cell_names), k=10)

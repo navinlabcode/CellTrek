@@ -2,7 +2,7 @@
 % Please edit documentation in R/FindCorMarkers.R
 \name{FindCorMarkers}
 \alias{FindCorMarkers}
-\title{Title Find highly correlated markers to target features}
+\title{Find highly correlated markers to target features}
 \usage{
 FindCorMarkers(srt_inp, assay = "RNA", features, method = "spearman")
 }
@@ -17,7 +17,7 @@ FindCorMarkers(srt_inp, assay = "RNA", features, method = "spearman")
 
 }
 \description{
-Title Find highly correlated markers to target features
+Find highly correlated markers to target features
 }
 \examples{
 CorMarkers <- FindCorMarkers(srt_inp=test_seurat, assay='RNA', features=c('k_dist', 'sig_score'), method='spearman')

@@ -2,7 +2,7 @@
 % Please edit documentation in R/celltrek.R
 \name{traint}
 \alias{traint}
-\title{Title Co-embedding ST and SC data using Seurat transfer anchors}
+\title{Co-embedding ST and SC data using Seurat transfer anchors}
 \usage{
 traint(
   st_data,
@@ -40,7 +40,7 @@ traint(
 Seurat object of SC-ST co-embedding
 }
 \description{
-Title Co-embedding ST and SC data using Seurat transfer anchors
+Co-embedding ST and SC data using Seurat transfer anchors
 }
 \examples{
 st_sc_traint <- traint(st_data=brain_st, sc_data=brain_sc, st_assay='Spatial', sc_assay='scint', nfeatures=2000, cell_names='cell_names', coord_xy=c('imagerow', 'imagecol'), gene_kept=NULL)

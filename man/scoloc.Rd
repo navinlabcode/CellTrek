@@ -2,7 +2,7 @@
 % Please edit documentation in R/scoloc.R
 \name{scoloc}
 \alias{scoloc}
-\title{Title SColoc module}
+\title{SColoc module}
 \usage{
 scoloc(
   celltrek_inp,
@@ -31,7 +31,7 @@ scoloc(
 A list of 1.Bootstrap distance; 2.MST consensus matrix
 }
 \description{
-Title SColoc module
+SColoc module
 }
 \examples{
 cell_scoloc <- scoloc(celltrek_inp, col_cell='cell_names', use_method='KL', h=140, n=25)

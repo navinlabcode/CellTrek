@@ -2,7 +2,7 @@
 % Please edit documentation in R/celltrek.R
 \name{celltrek_from_dist}
 \alias{celltrek_from_dist}
-\title{Title CellTrek from a pre-computed SC-ST distance matrix}
+\title{CellTrek from a pre-computed SC-ST distance matrix}
 \usage{
 celltrek_from_dist(
   dist_mat,
@@ -42,7 +42,7 @@ celltrek_from_dist(
 A list of 1.Seurat object
 }
 \description{
-Title CellTrek from a pre-computed SC-ST distance matrix
+CellTrek from a pre-computed SC-ST distance matrix
 }
 \examples{
 celltrek_res <- celltrek_from_dist(dist_mat, coord_df, dist_cut, top_spot=10, spot_n=10, r=NULL, sc_data, sc_assay='RNA')

@@ -2,7 +2,7 @@
 % Please edit documentation in R/celltrek.R
 \name{celltrek_repel}
 \alias{celltrek_repel}
-\title{Title Mannually repelling celltrek cells}
+\title{Mannually repelling celltrek cells}
 \usage{
 celltrek_repel(celltrek_inp, repel_r = 5, repel_iter = 10)
 }
@@ -17,5 +17,5 @@ celltrek_repel(celltrek_inp, repel_r = 5, repel_iter = 10)
 CellTrek(Seurat) object
 }
 \description{
-Title Mannually repelling celltrek cells
+Mannually repelling celltrek cells
 }

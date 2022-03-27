@@ -2,7 +2,7 @@
 % Please edit documentation in R/scoloc.R
 \name{build_delaunayn}
 \alias{build_delaunayn}
-\title{Title Build Delaunay triangulation network}
+\title{Build Delaunay triangulation network}
 \usage{
 build_delaunayn(coord_df, return_name = T, dist_cutoff = NULL)
 }
@@ -17,7 +17,7 @@ build_delaunayn(coord_df, return_name = T, dist_cutoff = NULL)
 Delaunay triangulation network edge list
 }
 \description{
-Title Build Delaunay triangulation network
+Build Delaunay triangulation network
 }
 \examples{
 test <- build_delaunayn(coord_df, return_name=T)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/scoexp.R
 \name{wgcna_wrapper}
 \alias{wgcna_wrapper}
-\title{Title A wrapper function of WGCNA with wcor matrix as input}
+\title{A wrapper function of WGCNA with wcor matrix as input}
 \usage{
 wgcna_wrapper(sim_mat, powerVector = c(1:20), minClusterSize = 50, ...)
 }
@@ -17,7 +17,7 @@ wgcna_wrapper(sim_mat, powerVector = c(1:20), minClusterSize = 50, ...)
 
 }
 \description{
-Title A wrapper function of WGCNA with wcor matrix as input
+A wrapper function of WGCNA with wcor matrix as input
 }
 \examples{
 wgcna_wrapper(sim_mat, powerVector=c(1:20), minClusterSize=50)
