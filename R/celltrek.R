@@ -1,4 +1,4 @@
-#' Title Co-embedding ST and SC data using Seurat transfer anchors
+#' Co-embedding ST and SC data using Seurat transfer anchors
 #'
 #' @param st_data Seurat ST data object
 #' @param sc_data Seurat SC data object
@@ -78,7 +78,7 @@ traint <- function (st_data, sc_data, st_assay='Spatial', sc_assay='scint', norm
   return (sc_st_int)
 }
 
-#' Title Mannually repelling celltrek cells
+#' Mannually repelling celltrek cells
 #'
 #' @param celltrek_inp CellTrek(Seurat) object
 #' @param repel_r Repelling radius
@@ -112,7 +112,7 @@ celltrek_repel <- function(celltrek_inp, repel_r=5, repel_iter=10) {
   return(celltrek_out)
 }
 
-#' Title Calculate the RF-distance between sc and st
+#' Calculate the RF-distance between sc and st
 #'
 #' @param st_sc_int Seurat traint object
 #' @param int_assay Name of integration assay
@@ -204,7 +204,7 @@ celltrek_dist <- function (st_sc_int, int_assay='traint', reduction='pca', intp 
   return (output)
 }
 
-#' Title
+#'
 #'
 #' @param dist_mat Distance matrix of sc-st (sc in rows and st in columns)
 #' @param coord_df Coordinates data frame of st (must contain coord_x, coord_y columns, barcode rownames)
@@ -256,7 +256,7 @@ celltrek_chart <- function (dist_mat, coord_df, dist_cut=500, top_spot=10, spot_
   return(list(sc_coord_raw, sc_coord))
 }
 
-#' Title CellTrek from a pre-computed SC-ST distance matrix
+#' CellTrek from a pre-computed SC-ST distance matrix
 #'
 #' @param dist_mat Distance matrix of sc-st (sc in rows and st in columns)
 #' @param coord_df Coordinates data frame of st (must contain two columns as coord_x, coord_y and rownames as barcodes)
@@ -319,7 +319,7 @@ celltrek_from_dist <- function (dist_mat, coord_df, dist_cut, top_spot=10, spot_
   return(output)
 }
 
-#' Title The core function of CellTrek
+#' The core function of CellTrek
 #'
 #' @param st_sc_int Seurat traint object
 #' @param int_assay Integration assay ('traint')
@@ -379,14 +379,23 @@ celltrek <- function (st_sc_int, int_assay='traint', sc_data=NULL, sc_assay='RNA
                                           dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
                                           dplyr::select(c(coord1, coord2)) %>% set_rownames(sc_coord$id_new) %>% as.matrix,
                                         assay=sc_assay, key='celltrek')
-    sc_pca_dr <- CreateDimReducObject(embeddings=sc_data@reductions$pca@cell.embeddings[sc_coord$id_raw, ] %>%
-                                        set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='pca')
-    sc_umap_dr <- CreateDimReducObject(embeddings=sc_data@reductions$umap@cell.embeddings[sc_coord$id_raw, ] %>%
-                                         set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='umap')
     sc_out@reductions$celltrek <- sc_coord_dr
     sc_out@reductions$celltrek_raw <- sc_coord_raw_df
-    sc_out@reductions$pca <- sc_pca_dr
-    sc_out@reductions$umap <- sc_umap_dr
+    if ('pca' %in% names(sc_data@reductions)) {
+      sc_pca_dr <- CreateDimReducObject(embeddings=sc_data@reductions$pca@cell.embeddings[sc_coord$id_raw, ] %>%
+                                          set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='pca')
+      sc_out@reductions$pca <- sc_pca_dr
+    }
+    if ('umap' %in% names(sc_data@reductions)) {
+      sc_umap_dr <- CreateDimReducObject(embeddings=sc_data@reductions$umap@cell.embeddings[sc_coord$id_raw, ] %>%
+                                           set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='umap')
+      sc_out@reductions$umap <- sc_umap_dr
+    }
+    if ('tsne' %in% names(sc_data@reductions)) {
+      sc_tsne_dr <- CreateDimReducObject(embeddings=sc_data@reductions$tsne@cell.embeddings[sc_coord$id_raw, ] %>%
+                                           set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='tsne')
+      sc_out@reductions$tsne <- sc_tsne_dr
+    }
   } else {
     cat('no sc data...')
     sc_out <- CreateSeuratObject(counts=st_sc_int[[int_assay]]@data[, sc_coord$id_raw] %>%
@@ -411,15 +420,23 @@ celltrek <- function (st_sc_int, int_assay='traint', sc_data=NULL, sc_assay='RNA
                                           set_rownames(sc_coord$id_new) %>%
                                           as.matrix,
                                         assay=int_assay, key='celltrek')
-    sc_pca_dr <- CreateDimReducObject(embeddings = st_sc_int@reductions$pca@cell.embeddings[sc_coord$id_raw, ] %>%
-                                        set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='pca')
-    sc_umap_dr <- CreateDimReducObject(embeddings = st_sc_int@reductions$umap@cell.embeddings[sc_coord$id_raw, ] %>%
-                                         set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='umap')
-
     sc_out@reductions$celltrek <- sc_coord_dr
     sc_out@reductions$celltrek_raw <- sc_coord_raw_df
-    sc_out@reductions$pca <- sc_pca_dr
-    sc_out@reductions$umap <- sc_umap_dr
+    if ('pca' %in% names(st_sc_int@reductions)) {
+      sc_pca_dr <- CreateDimReducObject(embeddings=st_sc_int@reductions$pca@cell.embeddings[sc_coord$id_raw, ] %>%
+                                          set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='pca')
+      sc_out@reductions$pca <- sc_pca_dr
+    }
+    if ('umap' %in% names(st_sc_int@reductions)) {
+      sc_umap_dr <- CreateDimReducObject(embeddings=st_sc_int@reductions$umap@cell.embeddings[sc_coord$id_raw, ] %>%
+                                           set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='umap')
+      sc_out@reductions$umap <- sc_umap_dr
+    }
+    if ('tsne' %in% names(st_sc_int@reductions)) {
+      sc_tsne_dr <- CreateDimReducObject(embeddings=st_sc_int@reductions$tsne@cell.embeddings[sc_coord$id_raw, ] %>%
+                                           set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='tsne')
+      sc_out@reductions$tsne <- sc_tsne_dr
+    }
   }
   sc_out@images <- st_sc_int@images
   sc_out@images[[1]]@assay <- DefaultAssay(sc_out)

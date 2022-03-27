@@ -166,7 +166,7 @@ KL_boot_mst <- function(dummy_df, coord_df, min_num=15, Xlim=range(coord_df[, 1]
   return(output)
 }
 
-#' Title Build Delaunay triangulation network
+#' Build Delaunay triangulation network
 #'
 #' @param coord_df Coordinates df
 #' @param return_name Return edge list with names?
@@ -342,7 +342,7 @@ KD_boot_mst <- function(meta_df, coord_df, col_cell='cell_names', boot_n=100, pr
   return(output)
 }
 
-#' Title Calculated K-distance between query cells and reference cells based on their spatial coordinates
+#' Calculated K-distance between query cells and reference cells based on their spatial coordinates
 #'
 #' @param inp_df inp_df must contain cell_names, 'coord_x', 'coord_y' columns
 #' @param ref Reference groups
@@ -403,7 +403,7 @@ kdist <- function(inp_df, ref=NULL, ref_type='all', que=NULL, k=10, new_name='kd
   return(output)
 }
 
-#' Title Run K-distance with CellTrek(Seurat) object and add a metadata column
+#' Run K-distance with CellTrek(Seurat) object and add a metadata column
 #'
 #' @param celltrek_inp SChart seurat input
 #' @param grp_col Column name in meta data for reference and query groups
@@ -432,7 +432,7 @@ run_kdist <- function(celltrek_inp, grp_col='cell_type', ref=NULL, ref_type='all
   return (celltrek_out)
 }
 
-#' Title SColoc module
+#' SColoc module
 #'
 #' @param celltrek_inp CellTrek input
 #' @param col_cell Column name of cell type, cell type names must be syntactically valid

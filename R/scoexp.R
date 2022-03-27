@@ -13,7 +13,7 @@ rbfk <- function (dis_mat, sigm, zero_diag=T) {
   return(rbfk_out)
 }
 
-#' Title Weighted cross correlation
+#' Weighted cross correlation
 #'
 #' @param X Expression matrix, n X p
 #' @param W Weight matrix, n X n
@@ -129,7 +129,7 @@ cc_gene_k <- function(cc_res, cor_mat, k=8, avg_con_min=.5, avg_cor_min=.5, min_
   res
 }
 
-#' Title A wrapper function of WGCNA with wcor matrix as input
+#' A wrapper function of WGCNA with wcor matrix as input
 #'
 #' @param sim_mat similarity matrix
 #' @param powerVector power vector
@@ -163,7 +163,7 @@ wgcna_wrapper <- function(sim_mat, powerVector=c(1:20), minClusterSize=50, ...) 
 }
 
 
-#' Title
+#'
 #'
 #' @param wgcna_res
 #' @param cor_mat
@@ -192,7 +192,7 @@ wgcna_gene_k <- function(wgcna_res, cor_mat, avg_cor_min=.5, min_gen=10, max_gen
 }
 
 
-#' Title SCoexp module
+#' SCoexp module
 #'
 #' @param celltrek_inp CellTrek input on cell of interests
 #' @param sigm

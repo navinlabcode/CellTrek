@@ -1,4 +1,4 @@
-#' Title Visualization of SColoc results
+#' Visualization of SColoc results
 #'
 #' @param adj_mat Adjacent matrix
 #' @param meta_data Optional, must contain id column match with adj_mat col/rownames

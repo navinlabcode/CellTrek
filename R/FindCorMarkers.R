@@ -1,4 +1,4 @@
-#' Title Find highly correlated markers to target features
+#' Find highly correlated markers to target features
 #'
 #' @param srt_inp Seurat input
 #' @param assay
