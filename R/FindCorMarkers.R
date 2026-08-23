@@ -12,7 +12,7 @@
 #'
 #' @examples CorMarkers <- FindCorMarkers(srt_inp=test_seurat, assay='RNA', features=c('k_dist', 'sig_score'), method='spearman')
 FindCorMarkers <- function(srt_inp, assay='RNA', features, method='spearman') {
-  exp_dat <- as.matrix(srt_inp[[assay]]@data)
+  exp_dat <- as.matrix(GetAssayData(srt_inp, assay=assay, layer='data'))
   output_df <- data.frame(p_val=numeric(), cor=numeric(), p_val_adj=numeric(), feature=character(), gene=character())
   if (all(features %in% colnames(srt_inp@meta.data)))
   for (i in 1:length(features)) {

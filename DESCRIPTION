@@ -1,6 +1,6 @@
 Package: CellTrek
 Title: Spatial Charting of Single Cell Transcriptomes in Tissues
-Version: 0.0.94
+Version: 0.0.95
 Authors@R: c(
     person("Runmin", 'Wei', email='wander1021@gmail.com', role=c('aut', 'cre')),
     person("Siyuan", 'He', email='SHe2@mdanderson.org', role=c('aut', 'ctb')) )
@@ -10,8 +10,8 @@ License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
-Imports: 
-    akima,
+Imports:
+    interp,
     data.table,
     dbscan,
     dplyr,

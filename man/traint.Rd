@@ -13,6 +13,7 @@ traint(
   nfeatures = 2000,
   cell_names = "cell_names",
   coord_xy = c("imagerow", "imagecol"),
+  coord_df = NULL,
   gene_kept = NULL,
   ...
 )
@@ -33,6 +34,11 @@ traint(
 \item{cell_names}{cell cluster/type column name in SC meta data}
 
 \item{coord_xy}{coordinates column names in ST images slot}
+
+\item{coord_df}{optional data frame/matrix of ST spatial coordinates to use directly,
+bypassing coordinate auto-detection from the image slot. Rownames must cover all ST
+cells/spots. If it contains the columns named in \code{coord_xy} those are used,
+otherwise the first two columns are taken as (coord_x, coord_y).}
 
 \item{gene_kept}{selected genes to be kept during integration}
 }

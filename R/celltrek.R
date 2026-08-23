@@ -7,6 +7,10 @@
 #' @param nfeatures number of features for integration
 #' @param cell_names cell cluster/type column name in SC meta data
 #' @param coord_xy coordinates column names in ST images slot
+#' @param coord_df optional data frame/matrix of ST spatial coordinates to use directly,
+#'   bypassing coordinate auto-detection from the image slot. Rownames must cover all ST
+#'   cells/spots. If it contains the columns named in \code{coord_xy} those are used,
+#'   otherwise the first two columns are taken as (coord_x, coord_y).
 #' @param gene_kept selected genes to be kept during integration
 #' @param norm normalization method: LogNormalize/SCTransform
 #'
@@ -20,15 +24,64 @@
 #' @examples
 #' st_sc_traint <- traint(st_data=brain_st, sc_data=brain_sc, st_assay='Spatial', sc_assay='scint', nfeatures=2000, cell_names='cell_names', coord_xy=c('imagerow', 'imagecol'), gene_kept=NULL)
 traint <- function (st_data, sc_data, st_assay='Spatial', sc_assay='scint', norm='LogNormalize', nfeatures=2000,
-                    cell_names='cell_names', coord_xy=c('imagerow', 'imagecol'), gene_kept=NULL, ...) {
+                    cell_names='cell_names', coord_xy=c('imagerow', 'imagecol'), coord_df=NULL, gene_kept=NULL, ...) {
 
   st_data$id <- names(st_data$orig.ident)
   sc_data$id <- names(sc_data$orig.ident)
   sc_data$cell_names <- make.names(sc_data@meta.data[, cell_names])
   st_data$type <- 'st'
   sc_data$type <- 'sc'
-  st_data$coord_x <- st_data@images[[1]]@coordinates[, coord_xy[1]]
-  st_data$coord_y <- st_data@images[[1]]@coordinates[, coord_xy[2]]
+  ## Resolve ST spatial coordinates. Priority:
+  ##  1) user-supplied coord_df (bypasses all image structures);
+  ##  2) the image @coordinates slot columns named in coord_xy (VisiumV1) -- used
+  ##     directly to preserve the original full-resolution coordinate scale;
+  ##  3) GetTissueCoordinates() for image classes without @coordinates
+  ##     (VisiumV2/FOV, which expose x/y). If none work, stop and ask for coord_df.
+  ## NOTE: GetTissueCoordinates() rescales VisiumV1 coordinates by the image scale
+  ## factor, which would shrink spot distances; hence we prefer @coordinates here.
+  st_cells <- Cells(st_data)
+  if (!is.null(coord_df)) {
+    coord_df <- as.data.frame(coord_df)
+    if (all(coord_xy %in% colnames(coord_df))) {
+      xy <- coord_df[, coord_xy, drop=FALSE]
+    } else {
+      if (ncol(coord_df) < 2) stop("coord_df must have at least two columns (coord_x, coord_y)")
+      xy <- coord_df[, 1:2, drop=FALSE]
+    }
+    if (!all(st_cells %in% rownames(xy))) {
+      stop("coord_df rownames must cover all ST cells/spots (Cells(st_data)); ",
+           sum(!st_cells %in% rownames(xy)), " missing")
+    }
+    st_data$coord_x <- xy[st_cells, 1]
+    st_data$coord_y <- xy[st_cells, 2]
+  } else if (length(st_data@images) > 0 &&
+             'coordinates' %in% slotNames(st_data@images[[1]]) &&
+             all(coord_xy %in% colnames(st_data@images[[1]]@coordinates))) {
+    ## VisiumV1: raw imagerow/imagecol (original scale)
+    st_coord <- st_data@images[[1]]@coordinates
+    st_data$coord_x <- st_coord[st_cells, coord_xy[1]]
+    st_data$coord_y <- st_coord[st_cells, coord_xy[2]]
+  } else {
+    st_coord <- tryCatch(Seurat::GetTissueCoordinates(st_data), error=function(e) NULL)
+    if (is.null(st_coord)) {
+      stop("Could not read spatial coordinates from st_data (unsupported image structure). ",
+           "Please supply them via the 'coord_df' argument.")
+    }
+    if (all(coord_xy %in% colnames(st_coord))) {
+      st_data$coord_x <- st_coord[st_cells, coord_xy[1]]
+      st_data$coord_y <- st_coord[st_cells, coord_xy[2]]
+    } else if (all(c('x', 'y') %in% colnames(st_coord))) {
+      ## VisiumV2/FOV: x is the column (imagecol), y is the row (imagerow)
+      st_data$coord_x <- st_coord[st_cells, 'y']
+      st_data$coord_y <- st_coord[st_cells, 'x']
+    } else {
+      stop("Spatial coordinate columns not found (looked for c('", coord_xy[1], "','", coord_xy[2],
+           "') or c('x','y')). Please supply them via the 'coord_df' argument.")
+    }
+  }
+  if (anyNA(st_data$coord_x) || anyNA(st_data$coord_y)) {
+    stop("Some ST cells/spots have missing coordinates after resolution; check coord_df / image coordinates.")
+  }
   DefaultAssay(st_data) <- st_assay
   DefaultAssay(sc_data) <- sc_assay
 
@@ -43,8 +96,8 @@ traint <- function (st_data, sc_data, st_assay='Spatial', sc_assay='scint', norm
     sc_st_features <- union(sc_st_features, gene_kept)
   }
 
-  sc_st_features <- sc_st_features[(sc_st_features %in% rownames(st_data[[st_assay]]@data)) &
-                                     (sc_st_features %in% rownames(sc_data[[sc_assay]]@data))]
+  sc_st_features <- sc_st_features[(sc_st_features %in% rownames(GetAssayData(st_data, assay=st_assay, layer='data'))) &
+                                     (sc_st_features %in% rownames(GetAssayData(sc_data, assay=sc_assay, layer='data')))]
   cat('Using', length(sc_st_features), 'features for integration... \n')
   ###
 
@@ -54,26 +107,29 @@ traint <- function (st_data, sc_data, st_assay='Spatial', sc_assay='scint', norm
 
   cat('Data transfering... \n')
   st_data_trans <- Seurat::TransferData(anchorset = sc_st_anchors,
-                                        refdata = GetAssayData(sc_data, assay = sc_assay, slot='data')[sc_st_features, ], weight.reduction = 'cca')
+                                        refdata = GetAssayData(sc_data, assay = sc_assay, layer='data')[sc_st_features, ], weight.reduction = 'cca')
   st_data@assays$transfer <- st_data_trans
 
   cat('Creating new Seurat object... \n')
   sc_st_meta <- dplyr::bind_rows(st_data@meta.data, sc_data@meta.data)
-  counts_temp <- cbind(data.frame(st_data[['transfer']]@data), data.frame(sc_data[[sc_assay]]@data[sc_st_features, ] %>% data.frame))
+  counts_temp <- cbind(data.frame(GetAssayData(st_data, assay='transfer', layer='data')),
+                       data.frame(GetAssayData(sc_data, assay=sc_assay, layer='data')[sc_st_features, ] %>% data.frame))
   rownames(sc_st_meta) <- make.names(sc_st_meta$id)
   colnames(counts_temp) <- make.names(sc_st_meta$id)
-  sc_st_int <- CreateSeuratObject(counts = counts_temp, assay = 'traint', meta.data = sc_st_meta)
-  sc_st_int[['traint']]@data <- sc_st_int[['traint']]@counts
-  sc_st_int[['traint']]@counts <- matrix(NA, nrow = 0, ncol = 0)
+  sc_st_int <- CreateSeuratObject(counts = as.matrix(counts_temp), assay = 'traint', meta.data = sc_st_meta)
+  sc_st_int <- SetAssayData(sc_st_int, assay='traint', layer='data',
+                            new.data = GetAssayData(sc_st_int, assay='traint', layer='counts'))
 
   cat('Scaling -> PCA -> UMAP... \n')
   sc_st_int <- ScaleData(sc_st_int, features = sc_st_features) %>%
     RunPCA(features = sc_st_features)
   sc_st_int <- RunUMAP(sc_st_int, dims = 1:30)
   sc_st_int@images <- st_data@images
-  sc_st_int@images[[1]]@coordinates <- data.frame(imagerow=sc_st_int@meta.data$coord_x,
-                                                  imagecol=sc_st_int@meta.data$coord_y) %>%
-    set_rownames(rownames(sc_st_int@meta.data))
+  if ('coordinates' %in% slotNames(sc_st_int@images[[1]])) {
+    sc_st_int@images[[1]]@coordinates <- data.frame(imagerow=sc_st_int@meta.data$coord_x,
+                                                    imagecol=sc_st_int@meta.data$coord_y) %>%
+      set_rownames(rownames(sc_st_int@meta.data))
+  }
 
   return (sc_st_int)
 }
@@ -127,7 +183,7 @@ celltrek_repel <- function(celltrek_inp, repel_r=5, repel_iter=10) {
 #' @return A list of 1. celltrek_distance matrix; 2. trained random forest model (optional)
 #'
 #' @import dbscan
-#' @importFrom akima interpp
+#' @importFrom interp interpp
 #' @import magrittr
 #' @import dplyr
 #' @import randomForestSRC
@@ -171,7 +227,7 @@ celltrek_dist <- function (st_sc_int, int_assay='traint', reduction='pca', intp 
     }) %>% Reduce(rbind, .)
 
     st_intp_df <- apply(st_pca[, 1:nPCs], 2, function(col_x) {
-      akima::interpp(x=st_pca$coord_x, y=st_pca$coord_y, z=col_x,
+      interp::interpp(x=st_pca$coord_x, y=st_pca$coord_y, z=col_x,
                      linear=intp_lin, xo=st_intp_df$coord_x, yo=st_intp_df$coord_y) %>%
         magrittr::extract2('z')
     }) %>% data.frame(., id='X', type='st_intp', st_intp_df) %>% na.omit
@@ -284,27 +340,26 @@ celltrek_from_dist <- function (dist_mat, coord_df, dist_cut, top_spot=10, spot_
   sc_coord_list <- celltrek_chart(dist_mat=dist_mat, coord_df=coord_df, dist_cut=dist_cut, top_spot=top_spot, spot_n=spot_n, repel_r=repel_r, repel_iter=repel_iter)
   sc_coord_raw <- sc_coord_list[[1]]
   sc_coord <- sc_coord_list[[2]]
-  sc_out <- CreateSeuratObject(counts=sc_data[[sc_assay]]@data[, sc_coord$id_raw] %>% set_colnames(sc_coord$id_new),
+  sc_out <- CreateSeuratObject(counts=as.matrix(GetAssayData(sc_data, assay=sc_assay, layer='data')[, sc_coord$id_raw]) %>% set_colnames(sc_coord$id_new),
                                project='celltrek', assay=sc_assay,
                                meta.data=sc_data@meta.data[sc_coord$id_raw, ] %>%
                                  dplyr::rename(id_raw=id) %>%
                                  mutate(id_new=sc_coord$id_new) %>%
                                  set_rownames(sc_coord$id_new))
   sc_out@meta.data <- dplyr::left_join(sc_out@meta.data, sc_coord) %>% data.frame %>% set_rownames(sc_out$id_new)
-  sc_out[[sc_assay]]@data <- sc_out[[sc_assay]]@counts
-  sc_out[[sc_assay]]@counts <- matrix(nrow = 0, ncol = 0)
+  sc_out <- SetAssayData(sc_out, assay=sc_assay, layer='data', new.data=GetAssayData(sc_out, assay=sc_assay, layer='counts'))
   sc_coord_raw_df <- CreateDimReducObject(embeddings=sc_coord_raw %>%
                                             dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
                                             dplyr::select(c(coord1, coord2)) %>% set_rownames(sc_coord_raw$id_new) %>% as.matrix,
-                                          assay=sc_assay, key='celltrek_raw')
+                                          assay=sc_assay, key='celltrekraw_')
   sc_coord_dr <- CreateDimReducObject(embeddings=sc_coord %>%
                                         dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
                                         dplyr::select(c(coord1, coord2)) %>% set_rownames(sc_coord$id_new) %>% as.matrix,
-                                      assay=sc_assay, key='celltrek')
+                                      assay=sc_assay, key='celltrek_')
   sc_pca_dr <- CreateDimReducObject(embeddings=sc_data@reductions$pca@cell.embeddings[sc_coord$id_raw, ] %>%
-                                      set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='pca')
+                                      set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='pca_')
   sc_umap_dr <- CreateDimReducObject(embeddings=sc_data@reductions$umap@cell.embeddings[sc_coord$id_raw, ] %>%
-                                       set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='umap')
+                                       set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='umap_')
   sc_out@reductions$celltrek <- sc_coord_dr
   sc_out@reductions$celltrek_raw <- sc_coord_raw_df
   sc_out@reductions$pca <- sc_pca_dr
@@ -312,7 +367,9 @@ celltrek_from_dist <- function (dist_mat, coord_df, dist_cut, top_spot=10, spot_
   if (!is.null(st_data)) {
     sc_out@images <- st_data@images
     sc_out@images[[1]]@assay <- DefaultAssay(sc_out)
-    sc_out@images[[1]]@coordinates <- data.frame(imagerow=sc_coord$coord_x, imagecol=sc_coord$coord_y) %>% set_rownames(sc_coord$id_new)
+    if ('coordinates' %in% slotNames(sc_out@images[[1]])) {
+      sc_out@images[[1]]@coordinates <- data.frame(imagerow=sc_coord$coord_x, imagecol=sc_coord$coord_y) %>% set_rownames(sc_coord$id_new)
+    }
     sc_out@images[[1]]@scale.factors$spot_dis <- spot_dis
   }
   output <- list(celltrek=sc_out)
@@ -361,7 +418,7 @@ celltrek <- function (st_sc_int, int_assay='traint', sc_data=NULL, sc_assay='RNA
   if (!is.null(sc_data)) {
     cat('sc data...')
     sc_data$id <- Seurat::Cells(sc_data)
-    sc_out <- CreateSeuratObject(counts=sc_data[[sc_assay]]@data[, sc_coord$id_raw] %>% set_colnames(sc_coord$id_new),
+    sc_out <- CreateSeuratObject(counts=as.matrix(GetAssayData(sc_data, assay=sc_assay, layer='data')[, sc_coord$id_raw]) %>% set_colnames(sc_coord$id_new),
                                  project='celltrek', assay=sc_assay,
                                  meta.data=sc_data@meta.data[sc_coord$id_raw, ] %>%
                                    dplyr::rename(id_raw=id) %>%
@@ -369,36 +426,35 @@ celltrek <- function (st_sc_int, int_assay='traint', sc_data=NULL, sc_assay='RNA
                                    set_rownames(sc_coord$id_new))
     sc_out@meta.data <- dplyr::left_join(sc_out@meta.data, sc_coord) %>% data.frame %>% set_rownames(sc_out$id_new)
 
-    sc_out[[sc_assay]]@data <- sc_out[[sc_assay]]@counts
-    sc_out[[sc_assay]]@counts <- matrix(nrow = 0, ncol = 0)
+    sc_out <- SetAssayData(sc_out, assay=sc_assay, layer='data', new.data=GetAssayData(sc_out, assay=sc_assay, layer='counts'))
     sc_coord_raw_df <- CreateDimReducObject(embeddings=sc_coord_raw %>%
                                               dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
                                               dplyr::select(c(coord1, coord2)) %>% set_rownames(sc_coord_raw$id_new) %>% as.matrix,
-                                            assay=sc_assay, key='celltrek_raw')
+                                            assay=sc_assay, key='celltrekraw_')
     sc_coord_dr <- CreateDimReducObject(embeddings=sc_coord %>%
                                           dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
                                           dplyr::select(c(coord1, coord2)) %>% set_rownames(sc_coord$id_new) %>% as.matrix,
-                                        assay=sc_assay, key='celltrek')
+                                        assay=sc_assay, key='celltrek_')
     sc_out@reductions$celltrek <- sc_coord_dr
     sc_out@reductions$celltrek_raw <- sc_coord_raw_df
     if ('pca' %in% names(sc_data@reductions)) {
       sc_pca_dr <- CreateDimReducObject(embeddings=sc_data@reductions$pca@cell.embeddings[sc_coord$id_raw, ] %>%
-                                          set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='pca')
+                                          set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='pca_')
       sc_out@reductions$pca <- sc_pca_dr
     }
     if ('umap' %in% names(sc_data@reductions)) {
       sc_umap_dr <- CreateDimReducObject(embeddings=sc_data@reductions$umap@cell.embeddings[sc_coord$id_raw, ] %>%
-                                           set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='umap')
+                                           set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='umap_')
       sc_out@reductions$umap <- sc_umap_dr
     }
     if ('tsne' %in% names(sc_data@reductions)) {
       sc_tsne_dr <- CreateDimReducObject(embeddings=sc_data@reductions$tsne@cell.embeddings[sc_coord$id_raw, ] %>%
-                                           set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='tsne')
+                                           set_rownames(sc_coord$id_new) %>% as.matrix, assay=sc_assay, key='tsne_')
       sc_out@reductions$tsne <- sc_tsne_dr
     }
   } else {
     cat('no sc data...')
-    sc_out <- CreateSeuratObject(counts=st_sc_int[[int_assay]]@data[, sc_coord$id_raw] %>%
+    sc_out <- CreateSeuratObject(counts=as.matrix(GetAssayData(st_sc_int, assay=int_assay, layer='data')[, sc_coord$id_raw]) %>%
                                    set_colnames(sc_coord$id_new),
                                  project='celltrek', assay=int_assay,
                                  meta.data=st_sc_int@meta.data[sc_coord$id_raw, ] %>%
@@ -408,39 +464,42 @@ celltrek <- function (st_sc_int, int_assay='traint', sc_data=NULL, sc_assay='RNA
     sc_out$coord_x <- sc_coord$coord_x[match(sc_coord$id_new, sc_out$id_new)]
     sc_out$coord_y <- sc_coord$coord_y[match(sc_coord$id_new, sc_out$id_new)]
 
-    sc_out[[int_assay]]@counts <- matrix(nrow = 0, ncol = 0)
-    sc_out[[int_assay]]@scale.data <- st_sc_int[[int_assay]]@scale.data[, sc_coord$id_raw] %>% set_colnames(sc_coord$id_new)
+    sc_out <- SetAssayData(sc_out, assay=int_assay, layer='data', new.data=GetAssayData(sc_out, assay=int_assay, layer='counts'))
+    sc_out <- SetAssayData(sc_out, assay=int_assay, layer='scale.data',
+                           new.data=GetAssayData(st_sc_int, assay=int_assay, layer='scale.data')[, sc_coord$id_raw] %>% set_colnames(sc_coord$id_new))
     sc_coord_raw_df <- CreateDimReducObject(embeddings=sc_coord_raw %>%
                                               dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
                                               dplyr::select(c(coord1, coord2)) %>% set_rownames(sc_coord_raw$id_new) %>% as.matrix,
-                                            assay=sc_assay, key='celltrek_raw')
+                                            assay=sc_assay, key='celltrekraw_')
     sc_coord_dr <- CreateDimReducObject(embeddings = sc_coord %>%
                                           dplyr::mutate(coord1=coord_y, coord2=max(coord_x)+min(coord_x)-coord_x) %>%
                                           dplyr::select(c(coord1, coord2)) %>%
                                           set_rownames(sc_coord$id_new) %>%
                                           as.matrix,
-                                        assay=int_assay, key='celltrek')
+                                        assay=int_assay, key='celltrek_')
     sc_out@reductions$celltrek <- sc_coord_dr
     sc_out@reductions$celltrek_raw <- sc_coord_raw_df
     if ('pca' %in% names(st_sc_int@reductions)) {
       sc_pca_dr <- CreateDimReducObject(embeddings=st_sc_int@reductions$pca@cell.embeddings[sc_coord$id_raw, ] %>%
-                                          set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='pca')
+                                          set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='pca_')
       sc_out@reductions$pca <- sc_pca_dr
     }
     if ('umap' %in% names(st_sc_int@reductions)) {
       sc_umap_dr <- CreateDimReducObject(embeddings=st_sc_int@reductions$umap@cell.embeddings[sc_coord$id_raw, ] %>%
-                                           set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='umap')
+                                           set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='umap_')
       sc_out@reductions$umap <- sc_umap_dr
     }
     if ('tsne' %in% names(st_sc_int@reductions)) {
       sc_tsne_dr <- CreateDimReducObject(embeddings=st_sc_int@reductions$tsne@cell.embeddings[sc_coord$id_raw, ] %>%
-                                           set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='tsne')
+                                           set_rownames(sc_coord$id_new) %>% as.matrix, assay=int_assay, key='tsne_')
       sc_out@reductions$tsne <- sc_tsne_dr
     }
   }
   sc_out@images <- st_sc_int@images
   sc_out@images[[1]]@assay <- DefaultAssay(sc_out)
-  sc_out@images[[1]]@coordinates <- data.frame(imagerow=sc_coord$coord_x, imagecol=sc_coord$coord_y) %>% set_rownames(sc_coord$id_new)
+  if ('coordinates' %in% slotNames(sc_out@images[[1]])) {
+    sc_out@images[[1]]@coordinates <- data.frame(imagerow=sc_coord$coord_x, imagecol=sc_coord$coord_y) %>% set_rownames(sc_coord$id_new)
+  }
   sc_out@images[[1]]@scale.factors$spot_dis <- dist_res$spot_d
   sc_out@images[[1]]@scale.factors$spot_dis_intp <- spot_dis_intp
 
