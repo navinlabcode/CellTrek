@@ -1,5 +1,12 @@
 # A Quick Tour of CellTrek Toolkit <a href='https://github.com/navinlabcode/CellTrek'><img src='vignette_files/CellTrek_logo_redesign.png' align="right" height="200" /></a>
 
+> ### 🆕 Seurat v5 support
+> A **Seurat v5–compatible** version of CellTrek is now available on the [`seurat-v5-compat`](https://github.com/navinlabcode/CellTrek/tree/seurat-v5-compat) branch (tested with Seurat 5.3.0). It also adds a `coord_df` argument to `traint()` for supplying spatial coordinates directly. Install it with:
+> ```r
+> devtools::install_github("navinlabcode/CellTrek", ref = "seurat-v5-compat")
+> ```
+> See the branch [NEWS.md](https://github.com/navinlabcode/CellTrek/blob/seurat-v5-compat/NEWS.md) for details.
+
 ## 1. Introduction and installation
 CellTrek is a computational framework that can directly map single cells back to their spatial coordinates in tissue sections based on scRNA-seq and ST data. This method provides a new paradigm that is distinct from ST deconvolution, enabling a more flexible and direct investigation of single cell data with spatial topography. The CellTrek toolkit also provides two downstream analysis modules, including SColoc for spatial colocalization analysis and SCoexp for spatial co-expression analysis.
 
