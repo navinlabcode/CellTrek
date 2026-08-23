@@ -16,9 +16,12 @@ allen_cortex) data through traint, celltrek, scoloc (KL/DT/KD), scoexp (cc) and 
 
 ## Spatial coordinates
 
-* `traint()` now reads ST coordinates via `GetTissueCoordinates()`, supporting both
-  VisiumV1 (`imagerow`/`imagecol`) and VisiumV2/FOV (`x`/`y`) image classes. Writes to
-  `image@coordinates` are guarded to VisiumV1 (VisiumV2 has no such slot).
+* `traint()` resolves ST coordinates with the priority: `coord_df` > the image
+  `@coordinates[,coord_xy]` slot (VisiumV1, kept at original full-resolution scale) >
+  `GetTissueCoordinates()` (VisiumV2/FOV `x`/`y`). Preferring `@coordinates` avoids the
+  coordinate down-scaling that `GetTissueCoordinates()` applies to VisiumV1 objects
+  (which shrank spot distances and made the fixed `repel_r` over-disperse the charting).
+  Writes to `image@coordinates` are guarded to VisiumV1 (VisiumV2 has no such slot).
 * New `traint(coord_df = )` argument: supply ST spatial coordinates directly to bypass
   differences/naming issues across image structures. Resolution priority is
   `coord_df` > auto-detect > a clear error asking for `coord_df`. Rownames must cover all

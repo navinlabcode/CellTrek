@@ -33,9 +33,12 @@ traint <- function (st_data, sc_data, st_assay='Spatial', sc_assay='scint', norm
   sc_data$type <- 'sc'
   ## Resolve ST spatial coordinates. Priority:
   ##  1) user-supplied coord_df (bypasses all image structures);
-  ##  2) auto-detect via GetTissueCoordinates() for VisiumV1 (imagerow/imagecol)
-  ##     or VisiumV2/FOV (x/y). If detection is not possible, stop and ask the
-  ##     user to pass coord_df explicitly.
+  ##  2) the image @coordinates slot columns named in coord_xy (VisiumV1) -- used
+  ##     directly to preserve the original full-resolution coordinate scale;
+  ##  3) GetTissueCoordinates() for image classes without @coordinates
+  ##     (VisiumV2/FOV, which expose x/y). If none work, stop and ask for coord_df.
+  ## NOTE: GetTissueCoordinates() rescales VisiumV1 coordinates by the image scale
+  ## factor, which would shrink spot distances; hence we prefer @coordinates here.
   st_cells <- Cells(st_data)
   if (!is.null(coord_df)) {
     coord_df <- as.data.frame(coord_df)
@@ -51,6 +54,13 @@ traint <- function (st_data, sc_data, st_assay='Spatial', sc_assay='scint', norm
     }
     st_data$coord_x <- xy[st_cells, 1]
     st_data$coord_y <- xy[st_cells, 2]
+  } else if (length(st_data@images) > 0 &&
+             'coordinates' %in% slotNames(st_data@images[[1]]) &&
+             all(coord_xy %in% colnames(st_data@images[[1]]@coordinates))) {
+    ## VisiumV1: raw imagerow/imagecol (original scale)
+    st_coord <- st_data@images[[1]]@coordinates
+    st_data$coord_x <- st_coord[st_cells, coord_xy[1]]
+    st_data$coord_y <- st_coord[st_cells, coord_xy[2]]
   } else {
     st_coord <- tryCatch(Seurat::GetTissueCoordinates(st_data), error=function(e) NULL)
     if (is.null(st_coord)) {
@@ -58,7 +68,6 @@ traint <- function (st_data, sc_data, st_assay='Spatial', sc_assay='scint', norm
            "Please supply them via the 'coord_df' argument.")
     }
     if (all(coord_xy %in% colnames(st_coord))) {
-      ## VisiumV1: imagerow/imagecol
       st_data$coord_x <- st_coord[st_cells, coord_xy[1]]
       st_data$coord_y <- st_coord[st_cells, coord_xy[2]]
     } else if (all(c('x', 'y') %in% colnames(st_coord))) {
