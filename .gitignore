@@ -1,0 +1,17 @@
+# Large test datasets (downloaded locally, not versioned)
+data/
+data2/
+data3/
+
+# Local test caches / logs / generated outputs
+tests_local/*.rds
+tests_local/*.log
+untitled_consensus_cluster/
+
+# R / RStudio
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.o
+*.so

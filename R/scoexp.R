@@ -225,18 +225,18 @@ scoexp <- function(celltrek_inp, sigm=NULL, assay='RNA', gene_select=NULL, zero_
   if (is.null(sigm)) sigm <- celltrek_inp@images[[1]]@scale.factors$spot_dis
   if (is.null(gene_select)) {
     cat('gene filtering...\n')
-    feature_nz <- apply(celltrek_inp[[assay]]@data, 1, function(x) mean(x!=0)*100)
+    feature_nz <- apply(GetAssayData(celltrek_inp, assay=assay, layer='data'), 1, function(x) mean(x!=0)*100)
     features <- names(feature_nz)[feature_nz > zero_cutoff]
     cat(length(features), 'features after filtering...\n')
   } else if (length(gene_select) > 1) {
-    features <- intersect(gene_select, rownames(celltrek_inp[[assay]]@data))
+    features <- intersect(gene_select, rownames(GetAssayData(celltrek_inp, assay=assay, layer='data')))
     if (length(features)==0) stop('No genes in gene_select detected')
   }
   celltrek_inp <- Seurat::ScaleData(celltrek_inp, features=features)
   res <- list(gs=c(), cc=c(), rbfk=c(), wcor=c())
   dist_mat <- dist(celltrek_inp@meta.data[, c('coord_x', 'coord_y')]) %>% as.matrix
   kern_mat <- rbfk(dist_mat, sigm=sigm, zero_diag=F)
-  expr_mat <- t(as.matrix(celltrek_inp[[assay]]@scale.data))
+  expr_mat <- t(as.matrix(GetAssayData(celltrek_inp, assay=assay, layer='scale.data')))
   cat('Calculating spatial-weighted cross-correlation...\n')
   wcor_mat <- wcor(X=expr_mat, W=kern_mat, method=cor_method)
 

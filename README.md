@@ -8,6 +8,8 @@ In this tutorial, we will demonstrate the cell charting workflow based on the mo
 library(devtools)
 install_github("navinlabcode/CellTrek")
 ```
+
+> **Seurat v5 compatibility note.** This version has been updated to run on Seurat v5 (tested with Seurat 5.3.0 / SeuratObject 5.2.0 on R 4.3). Internally, direct assay-slot access (`obj[[assay]]@data`/`@counts`/`@scale.data`) was replaced with the version-agnostic `GetAssayData()`/`SetAssayData()` accessors, and dimensional-reduction keys were made v5-compliant. The interpolation step now depends on the `interp` package (a drop-in replacement for `akima`, which is not available on all platforms). The tutorial code below has likewise been updated for v5 (e.g. `HVFInfo()` instead of `@meta.features`).
 ## 2. Loading the packages and datasets (scRNA-seq and ST data)
 We start by loading the packages needed for the analyses. Please install them if you haven't.
 ``` r
@@ -124,7 +126,6 @@ Based on the CellTrek result, we can further investigate the co-expression patte
 L5 IT cells first are extracted from the charting result.
 ``` r
 brain_celltrek_l5 <- subset(brain_celltrek, subset=cell_type=='L5 IT')
-brain_celltrek_l5@assays$RNA@scale.data <- matrix(NA, 1, 1)
 brain_celltrek_l5$cluster <- gsub('L5 IT VISp ', '', brain_celltrek_l5$cluster)
 DimPlot(brain_celltrek_l5, group.by = 'cluster')
 ```
@@ -132,12 +133,12 @@ DimPlot(brain_celltrek_l5, group.by = 'cluster')
 We select top 2000 variable genes (exclude mitochondrial, ribosomal and high-zero genes)
 ``` r
 brain_celltrek_l5 <- FindVariableFeatures(brain_celltrek_l5)
-vst_df <- brain_celltrek_l5@assays$RNA@meta.features %>% data.frame %>% mutate(id=rownames(.))
-nz_test <- apply(as.matrix(brain_celltrek_l5[['RNA']]@data), 1, function(x) mean(x!=0)*100)
+vst_df <- HVFInfo(brain_celltrek_l5) %>% data.frame %>% mutate(id=rownames(.))
+nz_test <- apply(as.matrix(GetAssayData(brain_celltrek_l5, assay='RNA', layer='data')), 1, function(x) mean(x!=0)*100)
 hz_gene <- names(nz_test)[nz_test<20]
 mt_gene <- grep('^Mt-', rownames(brain_celltrek_l5), value=T)
 rp_gene <- grep('^Rpl|^Rps', rownames(brain_celltrek_l5), value=T)
-vst_df <- vst_df %>% dplyr::filter(!(id %in% c(mt_gene, rp_gene, hz_gene))) %>% arrange(., -vst.variance.standardized)
+vst_df <- vst_df %>% dplyr::filter(!(id %in% c(mt_gene, rp_gene, hz_gene))) %>% arrange(., -variance.standardized)
 feature_temp <- vst_df$id[1:2000]
 ```
 We use scoexp to do the spatial-weighted gene co-expression analysis.
